@@ -1,0 +1,12 @@
+[package]
+name = "agent"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+arti-client = { version = "0.23.0", features = ["onion-service-client"]}
+tokio = { version = "1", features = ["full"]}
+gethostname = "0.5.0"
+goldberg = "0.1.0"
+serde_json = "1.0.128"
+serde = { version = "1.0", features = ["derive"] }

@@ -1,0 +1,6 @@
+api/onionservice
+api/api
+api/api.db
+api/api.sock
+agent/agent.id
+api/torrc
