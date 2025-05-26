@@ -12,10 +12,18 @@ Note that this is experimental and ongoing development effort.
 - Execution of shell commands.
 - Basic attempt of hiding C2 config in the agent's binary.
 
+Planned features:
+- Persistence. (Windows and Linux)
+- Sleep call acceleration detection.
+- Optional hibernation mode.
+
+Once enough of features related to the initial access stage are implemented, then post-exploitation features will be the primary focus.
+
 # SETUP
 This guide assumes you have Go, Rust, and XENA ready.
 
 - Run the C2 server via: cd api && go run . --api-key=your_secret_api_key_longer_than_16_chars
+- Run XENA's user interface; go to settings tab and put your_secret_api_key_longer_than_16_chars into "Authentication Token" field. (Alternatively the UI accepts it via AUTH_TOKEN environment variable)
 - Run Tor onion service based on the configuration made by the C2 program via: cd api && tor -f torrc
 - When Tor onion service is ready you will see a .onion domain inside: api/onionservice/hostname, place that domain in function "get_address" in agent/src/config.rs
 - Run the agent via: cd agent && cargo run
