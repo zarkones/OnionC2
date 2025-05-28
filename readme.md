@@ -11,9 +11,10 @@ Note that this is experimental and ongoing development effort.
 - Tor integration (allows for end to end encryption, hiding the C2's IP address)
 - Execution of shell commands.
 - Basic attempt of hiding C2 config in the agent's binary.
+- Registry based persistence on Windows.
 
 Planned features:
-- Persistence. (Windows and Linux)
+- Multiple persistence. (Windows and Linux)
 - Sleep call acceleration detection.
 - Optional hibernation mode.
 
