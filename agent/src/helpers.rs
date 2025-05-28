@@ -6,13 +6,32 @@ use tokio::io::{
     Result,
     BufReader,
 };
-use std::path::PathBuf;
+use std::{env, path::PathBuf};
 use tokio::fs::File;
 use goldberg::goldberg_stmts;
 use tokio::time::{sleep, Duration};
 
 #[inline]
+pub fn set_working_dir_to_program_dir() -> bool {
+    if let Ok(exe_path) = env::current_exe() {
+        if let Some(program_dir) = exe_path.parent() {
+            if let Ok(()) = env::set_current_dir(program_dir) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+#[inline]
 pub async fn load_id() -> Option<String> {
+    // Alternative way to keep track of the agent's ID is to provide it as an argument.
+    // As sometimes you can't or don't wanna write files.
+    let args: Vec<String> = env::args().collect();
+    if args.len() > 1 {
+        return Some(args[1].clone());
+    }
+
     let string_path = config::get_id_path();
     let file_path: PathBuf = PathBuf::from(string_path);
 
@@ -28,13 +47,9 @@ pub async fn load_id() -> Option<String> {
     let mut contents = String::new();
     
     match buf_reader.read_to_string(&mut contents).await {
-        Ok(_) => {
-            return Some(contents);
-        },
-        Err(_) => {
-            return None;
-        },
-    };
+        Ok(_) => Some(contents),
+        Err(_) => None,
+    }
 }
 
 #[inline]

