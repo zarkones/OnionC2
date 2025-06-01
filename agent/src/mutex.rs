@@ -9,7 +9,7 @@ use crate::config::get_mutex_name;
 // This function would return "true" if the mutex already
 // exists. Signaling that the current process should exit.
 // https://learn.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createmutexw
-pub fn create_program_mutex()  -> Result<(bool), Box<dyn std::error::Error>> {
+pub fn create_program_mutex()  -> Result<bool, Box<dyn std::error::Error>> {
     let mutex_name: Vec<u16> = OsStr::new(&get_mutex_name())
         .encode_wide()
         .chain(std::iter::once(0))

