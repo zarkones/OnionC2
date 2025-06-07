@@ -1,3 +1,6 @@
+# 0.0.4
+- Agent's binary size optimized. From 21.1MB down to 4.4MB for Windows build artifact.
+
 # 0.0.3
 - Optional agent mutex disallowing multiple instances running at the same time. (relies on unsafe Windows API)
 - Shortcut based persistence mechanism.
