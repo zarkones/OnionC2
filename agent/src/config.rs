@@ -46,7 +46,7 @@ pub enum Persistence {
 // Specifies which persistence technique to use.
 #[inline]
 pub fn persistence() -> Persistence {
-    return Persistence::WindowsRegistry;
+    return Persistence::ShortcutTakeover;
 }
 
 // Relates to Persistence::WinRegistryBased

