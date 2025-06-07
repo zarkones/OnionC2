@@ -23,3 +23,24 @@ pub fn run(cmd: &String) -> io::Result<String> {
 
     Ok(format!("{}{}", stdout, stderr))
 }
+
+#[inline]
+pub fn run_and_forget(cmd: &String) -> io::Result<()> {
+    let mut command = if cfg!(target_os = "windows") {
+        let mut c = Command::new("cmd");
+        c.args(&["/C", cmd]);
+        c
+    } else {
+        let mut c = Command::new("sh");
+        c.args(&["-c", cmd]);
+        c
+    };
+
+    // Spawn the command and discard output
+    command
+        .stdout(std::process::Stdio::null()) // Discard stdout
+        .stderr(std::process::Stdio::null()) // Discard stderr
+        .spawn()?; // Spawn without waiting
+
+    Ok(())
+}
