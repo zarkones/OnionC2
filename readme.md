@@ -12,6 +12,7 @@ Note that this is experimental and ongoing development effort.
 - Execution of shell commands.
 - Basic attempt of hiding C2 config in the agent's binary.
 - Registry based persistence on Windows.
+- Shortcut takeover based persistence on Windows.
 
 Planned features:
 - Multiple persistence. (Windows and Linux)
