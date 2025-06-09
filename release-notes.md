@@ -1,3 +1,6 @@
+# 0.0.5
+- Introduction of a command "/system-details" which returns information about RAM memory, CPU temperature, network interfaces, etc...
+
 # 0.0.4
 - Agent's binary size optimized. From 21.1MB down to 4.4MB for Windows build artifact.
 
