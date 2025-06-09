@@ -13,6 +13,7 @@ Note that this is experimental and ongoing development effort.
 - Basic attempt of hiding C2 config in the agent's binary.
 - Registry based persistence on Windows.
 - Shortcut takeover based persistence on Windows.
+- Command "/system-details" makes an agent return information about CPU, RAM, networks, etc...
 
 Planned features:
 - Multiple persistence. (Windows and Linux)
