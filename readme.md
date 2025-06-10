@@ -14,11 +14,12 @@ Note that this is experimental and ongoing development effort.
 - Registry based persistence on Windows.
 - Shortcut takeover based persistence on Windows.
 - Command "/system-details" makes an agent return information about CPU, RAM, networks, etc...
+- Command "/find-files|<STARTING_DIR_PATH>|<COMMA_SEPARATED_SEARCH_TERMS>" which based on criteria returns absolute path of files/directories of interest.
 
 Planned features:
-- Multiple persistence. (Windows and Linux)
 - Sleep call acceleration detection.
 - Optional hibernation mode.
+- Download/Upload files.
 
 Once enough of features related to the initial access stage are implemented, then post-exploitation features will be the primary focus.
 

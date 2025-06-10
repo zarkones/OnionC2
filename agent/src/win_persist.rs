@@ -15,11 +15,6 @@ use windows::{
 };
 use windows::core::Interface;
 
-/**
- * TODO:
- * Just handle the shortcut icon and make a new Edge Icon on the desktop, fuck it.
- */
-
 #[inline]
 pub fn shortcut_takeover(target_bin_path: &str, shortcut_name: &str) -> Result<(), Box<dyn std::error::Error>> {
     if env::consts::OS != "windows" {

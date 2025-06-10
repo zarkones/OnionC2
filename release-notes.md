@@ -1,3 +1,6 @@
+# 0.0.6
+- Introduction of a command "/find-files|<STARTING_DIR_PATH>|<COMMA_SEPARATED_SEARCH_TERMS>" which based on criteria returns absolute path of files/directories of interest. 
+
 # 0.0.5
 - Introduction of a command "/system-details" which returns information about RAM memory, CPU temperature, network interfaces, etc...
 

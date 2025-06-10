@@ -1,0 +1,1 @@
+RUSTFLAGS="-Zlocation-detail=none" RUSTFLAGS="-Zfmt-debug=none" cargo build --release --target x86_64-pc-windows-gnu

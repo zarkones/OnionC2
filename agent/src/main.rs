@@ -199,7 +199,24 @@ async fn main() {
         debug_println!("got messages: {}", messages.len());
 
         for message in messages {
-            let interpreted = (|| {
+
+
+            let mut interpreted = (|| {
+                if message.request.starts_with("/find-files") {
+                    debug_println!("_> Finding files...");
+
+                    match helpers::parse_find_files_input(&message.request) {
+                        Ok((path, terms)) => {
+                            debug_println!("_> Path is '{}' and search terms are '{:#?}'", &path, &terms);
+                            let files = helpers::find_files(path, terms);
+                            return files.join("\n");
+                        }
+                        Err(e) => {
+                            return format!("Error parsing the command: {}", e);
+                        }
+                    }
+                }
+
                 if message.request.trim() == "/system-details" {
                     debug_println!("_> Getting system details...");
                     let system_information = helpers::get_system_information();
@@ -225,6 +242,10 @@ async fn main() {
 
                 return command_output;
             })();
+
+            if interpreted.len() == 0 {
+                interpreted = "[empty response]".to_string();
+            }
 
             debug_println!("sending response: {} - {}\n{}", message.id.clone(), message.request.clone(), interpreted.clone());
 
