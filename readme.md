@@ -20,8 +20,7 @@ Planned features:
 - Sleep call acceleration detection.
 - Optional hibernation mode.
 - Download/Upload files.
-
-Once enough of features related to the initial access stage are implemented, then post-exploitation features will be the primary focus.
+- Take screenshot.
 
 # SETUP
 This guide assumes you have Go, Rust, and XENA ready.
