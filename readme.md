@@ -7,6 +7,14 @@ Agent does not need to "bundle" Tor service nor anything of a sort. Instead it r
 
 Note that this is experimental and ongoing development effort.
 
+### SOCIAL ###
+[Patreon](https://www.patreon.com/zarkones) |
+[Discord](https://discord.gg/qjJwSh2TF9) |
+[X.com](https://x.com/zarkones) |
+[YouTube](https://www.youtube.com/channel/UCn-7I-L-ZpiELb8-6z7z_Ug) |
+[Itch.io](https://zarkones.itch.io) |
+[GitHub](https://github.com/zarkones)
+
 # FEATURES
 - Tor integration (allows for end to end encryption, hiding the C2's IP address)
 - Execution of shell commands.
