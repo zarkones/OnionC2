@@ -7,10 +7,102 @@ use tokio::io::{
     Result,
     BufReader,
 };
+use std::error::Error;
 use std::{collections::BTreeMap, env, path::PathBuf};
 use tokio::fs::File;
 use goldberg::goldberg_stmts;
 use tokio::time::{sleep, Duration};
+use std::{fs, io};
+use std::path::Path;
+
+pub fn parse_find_files_input(input: &String) -> std::result::Result<(String, Vec<String>), Box<dyn Error>> {
+    // Split the input by '|' to separate command, path, and search terms.
+    let parts: Vec<&str> = input.split('|').collect();
+    
+    // Expect at least 2 parts: path and search terms. (command part may be present)
+    if parts.len() < 2 {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::Other,
+            "Input string must contain at least one '|' delimiter"
+        )));
+    }
+
+    // The absolute path is the second-to-last part. (or last part if only two parts)
+    let path_part = parts[parts.len() - 2];
+    if path_part.is_empty() {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::Other,
+            "Absolute path cannot be empty"
+        )));
+    }
+
+    // Validate that the path exists and is absolute.
+    let path = Path::new(path_part);
+    if !path.is_absolute() {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::Other,
+            format!("Path '{}' is not absolute", path_part)
+        )));
+    }
+
+    // Get the search terms from the last part.
+    let terms_part = parts[parts.len() - 1];
+    if terms_part.is_empty() {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::Other,
+            "Search terms cannot be empty"
+        )));
+    }
+
+    // Split search terms by comma, preserving spaces within terms.
+    let search_terms: Vec<String> = terms_part
+        .split(',')
+        .map(|s| s.trim().to_string())
+        .filter(|s| !s.is_empty())
+        .collect();
+
+    if search_terms.is_empty() {
+        return Err(Box::new(io::Error::new(
+            io::ErrorKind::Other,
+            "No valid search terms provided"
+        )));
+    }
+
+    Ok((path_part.to_string(), search_terms))
+}
+
+pub fn find_files(absolute_starting_path: String, search_terms: Vec<String>) -> Vec<String> {
+    let mut results = Vec::new();
+    find_files_recursive(&absolute_starting_path, &search_terms, &mut results);
+    results.dedup();
+    results
+}
+
+fn find_files_recursive(current_path: &str, search_terms: &[String], results: &mut Vec<String>) {
+    let path = Path::new(current_path);
+    let path_str = current_path.to_string();
+
+    // Check if the current path contains search terms.
+    for term in search_terms.iter() {
+        if !path_str.contains(term) {
+            continue;
+        }
+        results.push(path_str.clone());
+    }
+    
+    // If it's a directory, read its contents and recurse.
+    if path.is_dir() {
+        if let Ok(entries) = fs::read_dir(path) {
+            for entry in entries {
+                if let Ok(entry) = entry {
+                    let entry_path = entry.path();
+                    let entry_path_str = entry_path.to_string_lossy().to_string();
+                    find_files_recursive(&entry_path_str, search_terms, results);
+                }
+            }
+        }
+    }
+}
 
 #[inline]
 pub fn set_working_dir_to_program_dir() -> bool {
