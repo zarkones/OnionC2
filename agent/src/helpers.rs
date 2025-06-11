@@ -15,7 +15,23 @@ use tokio::time::{sleep, Duration};
 use std::{fs, io};
 use std::path::Path;
 
-pub fn parse_find_files_input(input: &String) -> std::result::Result<(String, Vec<String>), Box<dyn Error>> {
+// Former string is file's ID, latter is file's path.
+#[inline]
+pub fn parse_upload_command(input: &String) -> std::result::Result<(String, String), Box<dyn Error>> {
+    let parts: Vec<&str> = input.split('|').collect();
+
+        if parts.len() != 3 {
+            return Err(Box::new(io::Error::new(
+                io::ErrorKind::Other,
+                "Input string must contain two '|' delimiter"
+            )));
+        }
+    
+    return Ok((parts[1].into(), parts[2].into()));
+}
+
+#[inline]
+pub fn parse_find_files_command(input: &String) -> std::result::Result<(String, Vec<String>), Box<dyn Error>> {
     // Split the input by '|' to separate command, path, and search terms.
     let parts: Vec<&str> = input.split('|').collect();
     
@@ -71,6 +87,7 @@ pub fn parse_find_files_input(input: &String) -> std::result::Result<(String, Ve
     Ok((path_part.to_string(), search_terms))
 }
 
+#[inline]
 pub fn find_files(absolute_starting_path: String, search_terms: Vec<String>) -> Vec<String> {
     let mut results = Vec::new();
     find_files_recursive(&absolute_starting_path, &search_terms, &mut results);

