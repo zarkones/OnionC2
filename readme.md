@@ -23,11 +23,12 @@ Note that this is experimental and ongoing development effort.
 - Shortcut takeover based persistence on Windows.
 - Command "/system-details" makes an agent return information about CPU, RAM, networks, etc...
 - Command "/find-files|<STARTING_DIR_PATH>|<COMMA_SEPARATED_SEARCH_TERMS>" which based on criteria returns absolute path of files/directories of interest.
+- Command "/upload-file|<FILE_PATH>" which uploads a file via Tor.
 
 Planned features:
 - Sleep call acceleration detection.
 - Optional hibernation mode.
-- Download/Upload files.
+- Download files.
 - Take screenshot.
 
 # SETUP

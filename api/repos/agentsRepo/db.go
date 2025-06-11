@@ -6,7 +6,7 @@ import (
 )
 
 func Get(agentID string) (agent models.Agent, err error) {
-	return agent, db.ORM.Where("id = ?", agentID).Find(&agent).Error
+	return agent, db.ORM.Where("id = ?", agentID).First(&agent).Error
 }
 
 func GetMultiple() (agents []models.Agent, err error) {

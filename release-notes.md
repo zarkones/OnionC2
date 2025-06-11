@@ -1,3 +1,6 @@
+# 0.0.7
+- Introduction of a command "/upload-file|<FILE_PATH>" which uploads a file via Tor. It's difficult to abuse the file upload endpoint due to its limited attack surface as it requires a long UUID generated for each file.
+
 # 0.0.6
 - Introduction of a command "/find-files|<STARTING_DIR_PATH>|<COMMA_SEPARATED_SEARCH_TERMS>" which based on criteria returns absolute path of files/directories of interest. 
 

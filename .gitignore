@@ -1,4 +1,5 @@
 api/onionservice
+api/agent-uploaded-files
 api/api
 api/api.db
 api/api.sock

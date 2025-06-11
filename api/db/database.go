@@ -18,6 +18,7 @@ func Init(dbName string) error {
 	if err := db.AutoMigrate(
 		&models.Agent{},
 		&models.Message{},
+		&models.File{},
 	); err != nil {
 		return err
 	}

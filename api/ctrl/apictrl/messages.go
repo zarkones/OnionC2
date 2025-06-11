@@ -3,11 +3,13 @@ package apictrl
 import (
 	"api/config"
 	"api/models"
+	"api/repos/filesRepo"
 	"api/repos/messagesRepo"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 )
 
 func GetMessages(w http.ResponseWriter, r *http.Request) {
@@ -55,6 +57,21 @@ func InsertMessage(w http.ResponseWriter, r *http.Request) {
 	if newMsg.Response != "" {
 		http.Error(w, `{"error":"cannot insert message with response"}`, http.StatusBadRequest)
 		return
+	}
+
+	if strings.HasPrefix(newMsg.Request, "/upload-file|") {
+		filePath := strings.TrimPrefix(newMsg.Request, "/upload-file|")
+		file := &models.File{
+			UploadedByAgentID: newMsg.AgentID,
+			OriginalPath:      filePath,
+		}
+		if err := filesRepo.Insert(file); err != nil {
+			fmt.Println("api: error: filesRepo.Insert:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Uses the ID set by BeforeCreate
+		newMsg.Request = "/upload-file|" + filePath + "|" + file.ID
 	}
 
 	if err := messagesRepo.Insert(&newMsg); err != nil {
