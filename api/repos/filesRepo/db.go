@@ -18,14 +18,14 @@ func Insert(file *models.File) (err error) {
 	return db.ORM.Create(&file).Error
 }
 
-func SetUploaded(id string) (err error) {
+func SetCompleted(id string) (err error) {
 	file, err := Get(id)
 	if err != nil {
 		return err
 	}
-	if file.UploadedAt != 0 {
+	if file.CompletedAt != 0 {
 		return nil
 	}
-	file.UploadedAt = time.Now().UnixNano()
+	file.CompletedAt = time.Now().UnixNano()
 	return db.ORM.Save(&file).Error
 }

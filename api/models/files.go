@@ -7,11 +7,17 @@ import (
 	"gorm.io/gorm"
 )
 
+const (
+	ORDER_UPLOAD = iota
+	ORDER_DOWNLOAD
+)
+
 type File struct {
 	ID                string `json:"id" gorm:"primaryKey"`
 	UploadedByAgentID string `json:"uploadedByAgentId"`
 	OriginalPath      string `json:"originalPath"`
-	UploadedAt        int64  `json:"uploadedAt"`
+	Order             int    `json:"order"`
+	CompletedAt       int64  `json:"completedAt"`
 	CreatedAt         int64  `json:"createdAt"`
 }
 

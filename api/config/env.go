@@ -8,5 +8,6 @@ var (
 	ApiHost                = flag.String("api-host", "127.0.0.1:8080", "<host>:<port> of the user facing api")
 	ApiSecretKey           = flag.String("api-key", "", "secret key for user facing api")
 	OnionServicePath       = flag.String("onion-service-path", "./onionservice", "path to onion service's directory")
-	DownloadsDirectoryPath = flag.String("downloads-dir-path", "./agent-uploaded-files", "path to directory where agents would upload files an operator requests of them")
+	UploadsDirectoryPath   = flag.String("uploads-dir-path", "./agent-upload-dir", "path to directory where agents would upload files an operator requests of them")
+	DownloadsDirectoryPath = flag.String("downloads-dir-path", "./agent-download-dir", "path to directory where agents would download files from")
 )
