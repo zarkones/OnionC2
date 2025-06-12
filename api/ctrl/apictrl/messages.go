@@ -64,6 +64,7 @@ func InsertMessage(w http.ResponseWriter, r *http.Request) {
 		file := &models.File{
 			UploadedByAgentID: newMsg.AgentID,
 			OriginalPath:      filePath,
+			Order: models.ORDER_UPLOAD,
 		}
 		if err := filesRepo.Insert(file); err != nil {
 			fmt.Println("api: error: filesRepo.Insert:", err)
@@ -72,6 +73,22 @@ func InsertMessage(w http.ResponseWriter, r *http.Request) {
 		}
 		// Uses the ID set by BeforeCreate
 		newMsg.Request = "/upload-file|" + filePath + "|" + file.ID
+	}
+
+	if strings.HasPrefix(newMsg.Request, "/download-file|") {
+		filePath := strings.TrimPrefix(newMsg.Request, "/download-file|")
+		file := &models.File{
+			UploadedByAgentID: newMsg.AgentID,
+			OriginalPath:      filePath,
+			Order: models.ORDER_DOWNLOAD,
+		}
+		if err := filesRepo.Insert(file); err != nil {
+			fmt.Println("api: error: filesRepo.Insert:", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		// Uses the ID set by BeforeCreate
+		newMsg.Request = "/download-file|" + filePath + "|" + file.ID
 	}
 
 	if err := messagesRepo.Insert(&newMsg); err != nil {

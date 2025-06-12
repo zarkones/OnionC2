@@ -1,3 +1,6 @@
+# 0.0.8
+- Introduction of a command of "/download-file|<FILE_NAME_ON_DISK>|<FILE_ID>" enabling file downloads via Tor. Requires operator's download request, meaning there is no public directory someone can enumerate.
+
 # 0.0.7
 - Introduction of a command "/upload-file|<FILE_PATH>" which uploads a file via Tor. It's difficult to abuse the file upload endpoint due to its limited attack surface as it requires a long UUID generated for each file.
 
