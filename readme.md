@@ -41,6 +41,6 @@ This guide assumes you have Go, Rust, and XENA ready.
 - When Tor onion service is ready you will see a .onion domain inside: api/onionservice/hostname, place that domain in function "get_address" in agent/src/config.rs
 - Run the agent via: cd agent && cargo run
 
-That's it. If you wish to know more about it execute the C2 server with "-h" command for help, or read the source code. It's less than 1,000 lines of code. A good starting point for further development.
+That's it. If you wish to know more about it execute the C2 server with "-h" command for help, or read the source code. It's a lean codebase. A good starting point for further development.
 
 ![Promo Image 1](https://raw.githubusercontent.com/zarkones/OnionC2/production/promo/promo1.png)
