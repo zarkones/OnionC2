@@ -1,3 +1,6 @@
+# 0.0.9
+- Introduction of a command "/run|<COMMAND>" which executes a shell command, however, does not await it to finish.
+
 # 0.0.8
 - Introduction of a command of "/download-file|<FILE_NAME_ON_DISK>|<FILE_ID>" enabling file downloads via Tor. Requires operator's download request, meaning there is no public directory someone can enumerate.
 
