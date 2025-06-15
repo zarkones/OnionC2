@@ -14,6 +14,7 @@ use goldberg::goldberg_stmts;
 use tokio::time::{sleep, Duration};
 use std::{fs, io};
 use std::path::Path;
+use sysinfo;
 
 // Former string is file's ID, latter is file's path.
 #[inline]
@@ -184,6 +185,7 @@ pub struct SystemInformation {
     pub networks: Vec<String>,
     pub is_ac_power: String,
     pub cpu_temperature: String,
+    pub cpu_info: String,
 }
 
 #[inline]
@@ -230,12 +232,23 @@ pub fn get_system_information() -> SystemInformation {
         network_names.push(networks_error);
     }
 
+    let mut sys = sysinfo::System::new_all();
+
+    // First we update all information of our `System` struct.
+    sys.refresh_all();
+    
+    let mut cpus = String::new();
+    for cpu in sys.cpus() {
+        cpus += &format!("CPU: Name: {} | Brand: {} | Freq.: {}\n", cpu.name(), cpu.brand(), cpu.frequency());
+    }
+
     let information = SystemInformation{
         memory: memory,
         is_ac_power: is_on_ac_power,
         uptime_seconds: uptime,
         networks: network_names,
         cpu_temperature: cpu_temperature,
+        cpu_info: cpus,
     };
 
     return information;

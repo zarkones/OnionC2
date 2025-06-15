@@ -343,8 +343,9 @@ async fn main() {
                     let mut info_as_str = String::new();
                     info_as_str.push_str(&format!("Memory: {}", system_information.memory));
                     info_as_str.push_str(&format!("\nUptime: {}", system_information.uptime_seconds));
-                    info_as_str.push_str(&format!("\nCPU Temp: {}", system_information.cpu_temperature));
                     info_as_str.push_str(&format!("\nAC Power: {}", system_information.is_ac_power));
+                    info_as_str.push_str(&format!("\nCPU Temp: {}", system_information.cpu_temperature));
+                    info_as_str.push_str(&format!("\nCPU Info:\n{}", system_information.cpu_info));
                     for network in system_information.networks {
                         info_as_str.push_str(&format!("\nNetwork: {}", network));
                     }
