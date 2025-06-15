@@ -26,6 +26,7 @@ Note that this is experimental and ongoing development effort.
 - Command "/upload-file|<FILE_PATH>" which uploads a file via Tor.
 - Command "/download-file|<FILE_NAME_IN_C2s_DOWNLOAD_DIRECTORY>" which downloads a file via Tor.
 - Command "/run|<COMMAND>" which executes shell command without awaiting it. 
+- Command "/read-clipboard" which returns clipboard data.
 
 Planned features:
 - Sleep call acceleration detection.

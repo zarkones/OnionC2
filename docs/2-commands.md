@@ -16,4 +16,7 @@ Searches for files or directories on the remote system via search terms:
 Returns detailed information about the remote system, including RAM memory, CPU temperature, network interfaces, and more:
 - /system-details
 
+Returns clipboard data or an error if the clipboard is empty or cannot be accessed:
+- /read-clipboard
+
 Any other input would be executed as a shell command and the agent would send back the result.

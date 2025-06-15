@@ -15,6 +15,61 @@ use tokio::time::{sleep, Duration};
 use std::{fs, io};
 use std::path::Path;
 use sysinfo;
+use windows::Win32::System::DataExchange::{OpenClipboard, GetClipboardData, CloseClipboard};
+use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+use windows::Win32::Foundation::HGLOBAL;
+use std::ffi::CStr;
+
+#[inline]
+pub fn read_clipboard() -> std::result::Result<String, Box<dyn Error>> {
+    unsafe {
+        match OpenClipboard(None) {
+            Ok(_) => {},
+            Err(e) => {
+                return Err(e.into());
+            },
+        };
+
+        let handle = match GetClipboardData(1) {
+            Ok(handle) => handle,
+            Err(e) => {
+                return Err(e.into());
+            },
+        };
+
+        if handle.0.is_null() {
+            return Err("handle is null".into());
+        }
+
+        let hglobal = HGLOBAL(handle.0); // Convert HANDLE to HGLOBAL
+
+        let ptr = GlobalLock(hglobal);
+        if ptr.is_null() {
+            return Err("global lock pointer is null".into());
+        }
+
+        let c_str = CStr::from_ptr(ptr as *const i8);
+        let str = c_str.to_str().ok().map(|s| s.to_string());
+        match GlobalUnlock(hglobal) {
+            Ok(_) => {},
+            Err(e) => {
+                return Err(e.into());
+            },
+        }
+        match CloseClipboard() {
+            Ok(_) => {},
+            Err(e) => {
+                return Err(e.into());
+            },
+        };
+
+        if let Some(s) = str {
+            return Ok(s);
+        } else {
+            return Err("no data".to_string().into())
+        };
+    }
+}
 
 // Former string is file's ID, latter is file's path.
 #[inline]
