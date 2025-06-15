@@ -1,3 +1,6 @@
+# 0.0.10
+- Additional CPU information to "/system-details" command.
+
 # 0.0.9
 - Introduction of a command "/run|<COMMAND>" which executes a shell command, however, does not await it to finish.
 
