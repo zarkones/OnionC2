@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// InsertAgent allows an agent to registed with the C2 server.
 func InsertAgent(w http.ResponseWriter, r *http.Request) {
 	var newAgent models.Agent
 

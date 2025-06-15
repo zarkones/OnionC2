@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// DownloadFile serves files to agents who were ordered to download them.
 func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("fileID")
 
@@ -56,6 +57,7 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UploadFile handles file uploads by agents who were ordered to upload them.
 func UploadFile(w http.ResponseWriter, r *http.Request) {
 	fileID := r.PathValue("fileID")
 
@@ -107,6 +109,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// getFileName returns file's name from a path.
 func getFileName(path string) string {
 	// Replace all backslashes with forward slashes.
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")

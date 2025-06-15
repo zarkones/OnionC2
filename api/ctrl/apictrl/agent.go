@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// GetAgents returns list of registered agents.
 func GetAgents(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Authorization") != *config.ApiSecretKey {
 		log.Println("api: unauthorized: GetAgents")

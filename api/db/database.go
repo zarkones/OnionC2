@@ -9,6 +9,7 @@ import (
 
 var ORM *gorm.DB
 
+// Init initializes the database.
 func Init(dbName string) error {
 	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {
