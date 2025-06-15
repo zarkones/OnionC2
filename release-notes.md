@@ -2,7 +2,7 @@
 - Introduction of a command "/run|<COMMAND>" which executes a shell command, however, does not await it to finish.
 
 # 0.0.8
-- Introduction of a command of "/download-file|<FILE_NAME_ON_DISK>|<FILE_ID>" enabling file downloads via Tor. Requires operator's download request, meaning there is no public directory someone can enumerate.
+- Introduction of a command of "/download-file|<FILE_NAME_IN_C2s_DOWNLOAD_DIRECTORY>" enabling file downloads via Tor. Requires operator's download request, meaning there is no public directory someone can enumerate.
 
 # 0.0.7
 - Introduction of a command "/upload-file|<FILE_PATH>" which uploads a file via Tor. It's difficult to abuse the file upload endpoint due to its limited attack surface as it requires a long UUID generated for each file.

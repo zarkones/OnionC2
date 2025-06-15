@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// GetMessages returns messages exchanged with a specific agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Authorization") != *config.ApiSecretKey {
 		log.Println("api: unauthorized: GetMessages")
@@ -40,6 +41,7 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// InsertMessage sends a message to a specific agent.
 func InsertMessage(w http.ResponseWriter, r *http.Request) {
 	if r.Header.Get("Authorization") != *config.ApiSecretKey {
 		log.Println("api: unauthorized: InsertMessage")

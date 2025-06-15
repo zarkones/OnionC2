@@ -7,6 +7,7 @@ import (
 	"net/http"
 )
 
+// GetMessages returns messages specific to an agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
 	agentID := r.PathValue("agentID")
 
@@ -34,6 +35,7 @@ type AgentMsgRespCtx struct {
 	Response  string `json:"response"`
 }
 
+// InsertMessageResponse allows an agent to respond to a message.
 func InsertMessageResponse(w http.ResponseWriter, r *http.Request) {
 	var newMsg AgentMsgRespCtx
 
