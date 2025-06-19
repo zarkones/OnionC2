@@ -21,6 +21,7 @@ Note that this is experimental and ongoing development effort.
 - Basic attempt of hiding C2 config in the agent's binary.
 - Registry based persistence on Windows.
 - Shortcut takeover based persistence on Windows.
+- Active hours, allowing an agent to communicate only within specific time frames.
 - Command "/system-details" makes an agent return information about CPU, RAM, networks, etc...
 - Command "/find-files|<STARTING_DIR_PATH>|<COMMA_SEPARATED_SEARCH_TERMS>" which based on criteria returns absolute path of files/directories of interest.
 - Command "/upload-file|<FILE_PATH>" which uploads a file via Tor.

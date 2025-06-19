@@ -1,3 +1,6 @@
+# 0.0.12
+- Introduction of optional active hours. Allowing an agent to communicate only within specific time frames.
+
 # 0.0.11
 - Introduction of a command "/read-clipboard" which returns clipboard data or an error if the clipboard is empty or cannot be accessed.
 
