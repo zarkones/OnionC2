@@ -24,7 +24,7 @@ pub fn get_address() -> String {
 // time frames (accounted for timezone).
 #[inline]
 fn get_active_hours_enabled() -> bool {
-    true
+    false
 }
 
 // Specifies time frames in which an agent is supposed

@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod config;
 mod helpers;
 mod exc;
@@ -18,7 +20,7 @@ use tokio::io::{
     Result,
 };
 use gethostname::gethostname;
-use std::{env, io}; 
+use std::{env, io};
 use serde_json;
 use serde::{Serialize, Deserialize};
 
