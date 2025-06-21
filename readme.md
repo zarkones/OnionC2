@@ -26,7 +26,7 @@ Note that this is experimental and ongoing development effort.
 - Command "/find-files|<STARTING_DIR_PATH>|<COMMA_SEPARATED_SEARCH_TERMS>" which based on criteria returns absolute path of files/directories of interest.
 - Command "/upload-file|<FILE_PATH>" which uploads a file via Tor.
 - Command "/download-file|<FILE_NAME_IN_C2s_DOWNLOAD_DIRECTORY>" which downloads a file via Tor.
-- Command "/run|<COMMAND>" which executes shell command without awaiting it. 
+- Command "/run|<SHELL_COMMAND>" which executes shell command without awaiting it. 
 - Command "/read-clipboard" which returns clipboard data.
 
 Planned features:
@@ -35,6 +35,7 @@ Planned features:
 - Take screenshot.
 
 # SETUP
+[Setup Video Tutorial](https://youtu.be/Q7xVNUWcgvM)
 This guide assumes you have Go, Rust, and XENA ready.
 
 - Run the C2 server via: cd api && go run . --api-key=your_secret_api_key_longer_than_16_chars
