@@ -36,6 +36,7 @@ Planned features:
 
 # SETUP
 [Setup Video Tutorial](https://youtu.be/Q7xVNUWcgvM)
+
 This guide assumes you have Go, Rust, and XENA ready.
 
 - Run the C2 server via: cd api && go run . --api-key=your_secret_api_key_longer_than_16_chars
