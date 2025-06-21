@@ -1,3 +1,6 @@
+# 0.0.13
+- Bug fix: hiding terminal window on shell command execution on Windows operating system.
+
 # 0.0.12
 - Introduction of optional active hours. Allowing an agent to communicate only within specific time frames.
 

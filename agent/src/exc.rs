@@ -1,4 +1,4 @@
-use std::process::Command;
+use std::{os::windows::process::CommandExt, process::Command};
 use tokio::io;
 
 #[inline]
@@ -6,6 +6,7 @@ pub fn run(cmd: &String) -> io::Result<String> {
     let mut command = if cfg!(target_os = "windows") {
         let mut c = Command::new("cmd");
         c.args(&["/C", cmd]);
+        c.creation_flags(0x08000000); // CREATE_NO_WINDOW.
         c
     } else {
         let mut c = Command::new("sh");
