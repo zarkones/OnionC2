@@ -1,3 +1,6 @@
+# 0.0.14
+- Upgrading Tor client version.
+
 # 0.0.13
 - Bug fix: hiding terminal window on shell command execution on Windows operating system.
 
