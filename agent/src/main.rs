@@ -171,7 +171,7 @@ async fn main() {
         let mut stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
             Ok(s) => s,
             Err(e) => {
-                debug_eprintln!("failed to connect to the server: {:?}", e);
+                debug_eprintln!("failed to connect to the server: {}", e);
                 helpers::wait().await;
                 continue;
             }
@@ -394,7 +394,7 @@ async fn main() {
             let mut stream = match tor_client.connect_with_prefs((address.clone(), port), &s_prefs).await {
                 Ok(s) => s,
                 Err(e) => {
-                    debug_eprintln!("failed to connect to the server: {:?}", e);
+                    debug_eprintln!("failed to connect to the server: {}", e);
                     helpers::wait().await;
                     continue;
                 }
