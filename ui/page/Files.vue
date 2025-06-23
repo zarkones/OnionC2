@@ -1,3 +1,3 @@
 <template>
-    hello world
+    files page
 </template>

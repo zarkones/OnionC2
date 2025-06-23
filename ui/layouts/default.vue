@@ -1,0 +1,17 @@
+<template>
+    <v-app>
+        <v-app-bar app density="compact">
+            <v-tabs>
+                <v-tab to="/">Dashboard</v-tab>
+                <v-tab to="/agents">Agents</v-tab>
+                <v-tab to="/files">Files</v-tab>
+            </v-tabs>
+        </v-app-bar>
+
+        <NuxtPage />
+    </v-app>
+</template>
+
+<script setup lang="ts">
+
+</script>
