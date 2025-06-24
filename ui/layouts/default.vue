@@ -1,6 +1,6 @@
 <template>
     <v-app>
-        <v-app-bar app density="compact">
+        <v-app-bar app density="compact"  class="liquid-glass">
             <v-tabs>
                 <v-tab to="/">Dashboard</v-tab>
                 <v-tab to="/agents">Agents</v-tab>
