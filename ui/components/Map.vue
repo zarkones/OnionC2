@@ -22,8 +22,8 @@ const mapContainer = ref(null)
 const markers = ref([])
 
 // Map dimensions (adjust these to match your map image)
-const mapWidth = 4100  // Original width of the map image in pixels
-const mapHeight = 2317 // Original height of the map image in pixels
+const mapWidth = 2050  // Original width of the map image in pixels
+const mapHeight = 2317/2 // Original height of the map image in pixels
 
 // Computed style for the map container
 const transformStyle = computed(() => ({
