@@ -13,6 +13,7 @@
             <div> <Pie :data="dataCpus" :options="options" /> </div>
         </v-col>
         <v-col>
+            <span>Agents Trough Time</span>
             <Line :data="dataStats" :options="options" />
         </v-col>
     </v-row>
@@ -143,7 +144,8 @@ const dataStats = {
 }
 
 const options = {
-    responsive: true,
+    responsive: false,
+    aspectRatio: 1.6,
     maintainAspectRatio: false,
     plugins: {
         legend: {

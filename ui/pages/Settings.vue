@@ -1,0 +1,3 @@
+<template>
+    Settings page
+</template>
