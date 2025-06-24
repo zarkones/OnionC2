@@ -122,7 +122,7 @@ const setView = (lat, lon, zoomLevel = 1) => {
 
 // Set initial view to Europe on mount
 onMounted(() => {
-    setView(70, -85, 2.5) // Center on Europe (approx. 50°N, 10°E) with zoom 1
+    setView(48, 0, 2.5) // Center on Europe (approx. 50°N, 10°E) with zoom 1
 
     const srb = document.getElementById('RS')
     srb.style.fill = '#E53935'
