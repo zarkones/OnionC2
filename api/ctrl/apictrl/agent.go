@@ -9,7 +9,7 @@ import (
 
 // GetAgents returns list of registered agents.
 func GetAgents(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r, models.PERMISSION_AGENTS_LIST)
+	_, _, reject := authenticateAndAuthorize(w, r, models.PERMISSION_AGENTS_LIST, nil)
 	if reject {
 		return
 	}

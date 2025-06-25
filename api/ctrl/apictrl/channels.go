@@ -2,13 +2,17 @@ package apictrl
 
 import (
 	"api/models"
+	"api/repos/channelSecretsRepo"
 	"api/repos/channelsRepo"
+	"api/repos/permissionsRepo"
 	"encoding/json"
+	"errors"
+	"log"
 	"net/http"
 )
 
 func GetChannels(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r, models.PERMISSION_CHAT_LIST_CHANNELS)
+	_, _, reject := authenticateAndAuthorize(w, r, models.PERMISSION_CHAT_LIST_CHANNELS, nil)
 	if reject {
 		return
 	}
@@ -31,16 +35,34 @@ func GetChannels(w http.ResponseWriter, r *http.Request) {
 }
 
 func InsertChannel(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r, models.PERMISSION_CHAT_INSERT_CHANNEL)
+	type Ctx struct {
+		models.Channel
+		InvitedOperators []struct {
+			Username                     string `json:"username"`
+			HexEncodedRsaEncryptedAesKey string `json:"secret"`
+		} `json:"invitedUsernames"`
+	}
+
+	currentUsername, _, reject := authenticateAndAuthorize(w, r, models.PERMISSION_CHAT_INSERT_CHANNEL, nil)
 	if reject {
 		return
 	}
 
-	var channel models.Channel
+	var ctx Ctx
 
-	if err := json.NewDecoder(r.Body).Decode(&channel); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&ctx); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	if ctx.InvitedOperators == nil {
+		http.Error(w, "invited operators is nil", http.StatusBadRequest)
+		return
+	}
+
+	channel := models.Channel{
+		Name:        ctx.Name,
+		Description: ctx.Description,
 	}
 
 	if len(channel.Name) == 0 || len(channel.Name) > 64 {
@@ -57,6 +79,33 @@ func InsertChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	issues := []error{}
+	for _, invitedOperator := range ctx.InvitedOperators {
+		if err := permissionsRepo.Insert(&models.Permission{
+			Key:      models.PERMISSION_CHAT_LIST_CHANNEL_MESSAGES,
+			Username: invitedOperator.Username,
+			Metadata: channel.Name,
+		}); err != nil {
+			issues = append(issues, err)
+			log.Println("failed to give access to channel to user:", invitedOperator.Username, channel.Name)
+			continue
+		}
+
+		if err := channelSecretsRepo.Insert(&models.ChannelSecret{
+			RecipientOperatorUsername:    invitedOperator.Username,
+			HexEncodedRsaEncryptedAesKey: invitedOperator.HexEncodedRsaEncryptedAesKey,
+			CreatedBy:                    currentUsername,
+		}); err != nil {
+			issues = append(issues, err)
+			log.Println("failed to insert channel secret for user:", invitedOperator.Username, channel.Name)
+			continue
+		}
+	}
+	if len(issues) != 0 {
+		http.Error(w, errors.Join(issues...).Error(), http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -65,7 +114,7 @@ func UpdateChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteChannels(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r, models.PERMISSION_CHAT_DELETE_CHANNEL)
+	_, _, reject := authenticateAndAuthorize(w, r, models.PERMISSION_CHAT_DELETE_CHANNEL, nil)
 	if reject {
 		return
 	}
@@ -78,4 +127,5 @@ func DeleteChannels(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Trigger message deletion somehow.
+	// TODO: Trigger channel secrets somehow.
 }

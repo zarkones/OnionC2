@@ -36,7 +36,7 @@ const (
 type Permission struct {
 	ID        string        `json:"id" gorm:"primaryKey"`
 	Key       PermissionKey `json:"key"`
-	Username  int           `json:"username"`
+	Username  string        `json:"username"`
 	Metadata  string        `json:"metadata"`
 	CreatedAt int64         `json:"createdAt"`
 }

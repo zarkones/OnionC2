@@ -8,11 +8,11 @@ import (
 )
 
 type ChannelSecret struct {
-	ID                        string `json:"id" gorm:"primaryKey"`
-	RecipientOperatorUsername string `json:"recipientOperatorUsername"`
-	RsaEncryptedAesKey        string `json:"rsaEncryptedAesKey"`
-	CreatedBy                 string `json:"createdBy"`
-	CreatedAt                 int64  `json:"createdAt"`
+	ID                           string `json:"id" gorm:"primaryKey"`
+	RecipientOperatorUsername    string `json:"recipientOperatorUsername"`
+	HexEncodedRsaEncryptedAesKey string `json:"hexEncodedRsaEncryptedAesKey"`
+	CreatedBy                    string `json:"createdBy"`
+	CreatedAt                    int64  `json:"createdAt"`
 }
 
 func (c *ChannelSecret) BeforeCreate(tx *gorm.DB) (err error) {
