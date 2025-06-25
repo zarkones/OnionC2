@@ -13,7 +13,7 @@ import (
 
 // GetMessages returns messages exchanged with a specific agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r)
+	_, _, reject := authenticate(w, r, models.PERMISSION_AGENTS_LIST_MESSAGES)
 	if reject {
 		return
 	}
@@ -41,7 +41,7 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 
 // InsertMessage sends a message to a specific agent.
 func InsertMessage(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r)
+	_, _, reject := authenticate(w, r, models.PERMISSION_AGENTS_INSERT_MESSAGE)
 	if reject {
 		return
 	}

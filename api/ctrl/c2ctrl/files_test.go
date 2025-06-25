@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestXxx(t *testing.T) {
+func TestFileNameGrabbing(t *testing.T) {
 	paths := []string{
 		"something/somewhere/xyz.id",
 		"C:\\Users\\blablabla\\xyz.id",

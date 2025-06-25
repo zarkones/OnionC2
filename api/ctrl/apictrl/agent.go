@@ -1,6 +1,7 @@
 package apictrl
 
 import (
+	"api/models"
 	"api/repos/agentsRepo"
 	"encoding/json"
 	"net/http"
@@ -8,7 +9,7 @@ import (
 
 // GetAgents returns list of registered agents.
 func GetAgents(w http.ResponseWriter, r *http.Request) {
-	_, _, reject := authenticate(w, r)
+	_, _, reject := authenticate(w, r, models.PERMISSION_AGENTS_LIST)
 	if reject {
 		return
 	}
