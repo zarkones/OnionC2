@@ -13,6 +13,13 @@ func GetMultipleByUsername(username string) (permissions []models.Permission, er
 	return permissions, db.ORM.Where("username = ?", username).Find(&permissions).Error
 }
 
+func GetMultipleByChannel(channel string) (permissions []models.Permission, err error) {
+	return permissions, db.ORM.
+		Where("metadata = ?", channel).
+		Where("key = ?", models.PERMISSION_CHAT_LIST_CHANNEL_MESSAGES).
+		Find(&permissions).Error
+}
+
 func GetMultiple() (permissions []models.Permission, err error) {
 	return permissions, db.ORM.Find(&permissions).Error
 }

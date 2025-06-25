@@ -9,6 +9,7 @@ import (
 
 type ChannelSecret struct {
 	ID                           string `json:"id" gorm:"primaryKey"`
+	Channel                      string `json:"channel"`
 	RecipientOperatorUsername    string `json:"recipientOperatorUsername"`
 	HexEncodedRsaEncryptedAesKey string `json:"hexEncodedRsaEncryptedAesKey"`
 	CreatedBy                    string `json:"createdBy"`

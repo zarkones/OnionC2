@@ -1,6 +1,7 @@
 package apictrl
 
 import (
+	"api/core"
 	"api/models"
 	"api/repos/channelSecretsRepo"
 	"api/repos/channelsRepo"
@@ -9,6 +10,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"slices"
+	"sort"
 )
 
 func GetChannels(w http.ResponseWriter, r *http.Request) {
@@ -92,6 +95,7 @@ func InsertChannel(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if err := channelSecretsRepo.Insert(&models.ChannelSecret{
+			Channel:                      channel.Name,
 			RecipientOperatorUsername:    invitedOperator.Username,
 			HexEncodedRsaEncryptedAesKey: invitedOperator.HexEncodedRsaEncryptedAesKey,
 			CreatedBy:                    currentUsername,
@@ -128,4 +132,121 @@ func DeleteChannels(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: Trigger message deletion somehow.
 	// TODO: Trigger channel secrets somehow.
+}
+
+func InviteToChannel(w http.ResponseWriter, r *http.Request) {
+	currentUsername, permissions, reject := authenticate(w, r)
+	if reject {
+		return
+	}
+	if authorize(models.PERMISSION_CHAT_LIST_CHANNEL_MESSAGES, &currentUsername, permissions) {
+		return
+	}
+
+	channelName := r.PathValue("channelName")
+	invitedOperatorUsername := r.PathValue("invitedOperatorUsername")
+
+	type Ctx struct {
+		HexEncodedRsaEncryptedAesKey string `json:"secret"`
+	}
+
+	var ctx Ctx
+
+	if err := json.NewDecoder(r.Body).Decode(&ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if len(ctx.HexEncodedRsaEncryptedAesKey) == 0 {
+		http.Error(w, "invalid secret", http.StatusBadRequest)
+		return
+	}
+
+	if err := channelSecretsRepo.Insert(&models.ChannelSecret{
+		RecipientOperatorUsername:    invitedOperatorUsername,
+		Channel:                      channelName,
+		HexEncodedRsaEncryptedAesKey: ctx.HexEncodedRsaEncryptedAesKey,
+		CreatedBy:                    currentUsername,
+	}); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
+func RemoveFromChannel(w http.ResponseWriter, r *http.Request) {
+	currentUsername, currentUserPermissions, reject := authenticate(w, r)
+	if reject {
+		return
+	}
+	if authorize(models.PERMISSION_CHAT_LIST_CHANNEL_MESSAGES, &currentUsername, currentUserPermissions) {
+		return
+	}
+
+	channelName := r.PathValue("channelName")
+
+	var ctx struct {
+		RemovedOperatorUsername string `json:"removedOperatorUsername"`
+		Secrets                 []struct {
+			Username                     string `json:"username"`
+			HexEncodedRsaEncryptedAesKey string `json:"secret"`
+		} `json:"secrets"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&ctx); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	channelPermissions, err := permissionsRepo.GetMultipleByChannel(channelName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if len(channelPermissions) == 0 {
+		http.Error(w, "strangely there are no operators with access to this channel", http.StatusUnprocessableEntity)
+		return
+	}
+
+	operatorUsernames := []string{}
+	for _, permission := range channelPermissions {
+		if permission.Username == ctx.RemovedOperatorUsername {
+			continue
+		}
+		operatorUsernames = append(operatorUsernames, permission.Username)
+	}
+	operatorUsernames = core.Deduplicate(operatorUsernames)
+
+	operatorUsernamesFromCtx := make([]string, len(ctx.Secrets))
+	for i, secret := range ctx.Secrets {
+		operatorUsernamesFromCtx[i] = secret.Username
+	}
+	operatorUsernamesFromCtx = core.Deduplicate(operatorUsernamesFromCtx)
+
+	// Sorting so they can be compared
+	operatorUsernames = sort.StringSlice(operatorUsernames)
+	operatorUsernamesFromCtx = sort.StringSlice(operatorUsernamesFromCtx)
+
+	if len(operatorUsernames) != len(operatorUsernamesFromCtx) || slices.Compare(operatorUsernames, operatorUsernamesFromCtx) != 0 {
+		http.Error(w, "new secret must be provided for all operators with accesss to the channel", http.StatusUnprocessableEntity)
+		return
+	}
+
+	issues := []error{}
+	for _, secret := range ctx.Secrets {
+		if err := channelSecretsRepo.Insert(&models.ChannelSecret{
+			RecipientOperatorUsername:    secret.Username,
+			Channel:                      channelName,
+			HexEncodedRsaEncryptedAesKey: secret.HexEncodedRsaEncryptedAesKey,
+			CreatedBy:                    currentUsername,
+		}); err != nil {
+			log.Println("failed to insert new channel secret during removal of an operator:", err, channelName)
+			issues = append(issues, err)
+			continue
+		}
+	}
+	if len(issues) != 0 {
+		http.Error(w, errors.Join(issues...).Error(), http.StatusInternalServerError)
+		return
+	}
 }
