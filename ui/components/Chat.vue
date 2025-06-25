@@ -26,6 +26,11 @@
                         <p>{{ msg.content }}</p>
                     </div>
                 </div>
+                <v-text-field
+                    variant="outlined"
+                    density="compact"
+                    placeholder="Send Message"
+                />
             </v-col>
         </v-row>
     </div>
@@ -83,6 +88,7 @@ const channelCategories = computed(() => Object.keys(channels) as ChannelKey[])
     height: 100%;
     padding-top: 32px;
     padding-right: 32px;
+    padding-bottom: 0px;
 }
 
 .messages-wrapper {
