@@ -2,20 +2,49 @@ package main
 
 import (
 	"api/config"
+	"api/core/crypto"
 	"api/ctrl/apictrl"
 	"api/ctrl/c2ctrl"
 	"api/db"
+	"api/repos/operatorsRepo"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
 	// Assures command line arguments are valid enough to run the program.
 	// Exits if not.
 	config.Validate()
+
+	// Initialize an instance of SQLite database.
+	if err := db.Init(*config.DbPath); err != nil {
+		fmt.Println("error: writeTorrcConfig:", err)
+		os.Exit(1)
+	}
+
+	// Creation of administrative operator account.
+	if *config.UserInsertAdmin {
+		operator, recoveryPhrase, hexEncodedPrivateKey, err := crypto.CreateAdminOperator(*config.UserName)
+		if err != nil {
+			log.Println("failed to create admin operator account:", err)
+			os.Exit(1)
+		}
+
+		if err := operatorsRepo.Insert(&operator); err != nil {
+			log.Println("failed to inser admin operator account into database:", err)
+			os.Exit(1)
+		}
+
+		log.Println("Username:", operator.Username)
+		log.Println("Recovery Word Phrase:", strings.Join(recoveryPhrase, " "))
+		log.Println("Private Key:", hexEncodedPrivateKey)
+
+		os.Exit(0)
+	}
 
 	// Clean up previous Unix socket of the API, just in case it's there.
 	os.RemoveAll(*config.ApiSockPath)
@@ -30,12 +59,6 @@ func main() {
 	// https://community.torproject.org/onion-services/overview
 	// https://support.torproject.org/tbb/tbb-editing-torrc
 	if err := writeTorrcConfig(config.ApiSockPath, config.OnionServicePath); err != nil {
-		fmt.Println("error: writeTorrcConfig:", err)
-		os.Exit(1)
-	}
-
-	// Initialize an instance of SQLite database.
-	if err := db.Init(*config.DbPath); err != nil {
 		fmt.Println("error: writeTorrcConfig:", err)
 		os.Exit(1)
 	}

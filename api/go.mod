@@ -21,7 +21,9 @@ require (
 
 require (
 	github.com/glebarez/sqlite v1.11.0
+	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/zarkones/xena-crypto v0.0.3
 	golang.org/x/text v0.20.0 // indirect
 )

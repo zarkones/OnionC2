@@ -1,18 +1,15 @@
 package apictrl
 
 import (
-	"api/config"
 	"api/repos/agentsRepo"
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
 // GetAgents returns list of registered agents.
 func GetAgents(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Authorization") != *config.ApiSecretKey {
-		log.Println("api: unauthorized: GetAgents")
-		http.Error(w, "", http.StatusUnauthorized)
+	_, _, reject := authenticate(w, r)
+	if reject {
 		return
 	}
 

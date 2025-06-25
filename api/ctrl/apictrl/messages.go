@@ -1,7 +1,6 @@
 package apictrl
 
 import (
-	"api/config"
 	"api/models"
 	"api/repos/filesRepo"
 	"api/repos/messagesRepo"
@@ -14,9 +13,8 @@ import (
 
 // GetMessages returns messages exchanged with a specific agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Authorization") != *config.ApiSecretKey {
-		log.Println("api: unauthorized: GetMessages")
-		http.Error(w, "", http.StatusUnauthorized)
+	_, _, reject := authenticate(w, r)
+	if reject {
 		return
 	}
 
@@ -43,9 +41,8 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 
 // InsertMessage sends a message to a specific agent.
 func InsertMessage(w http.ResponseWriter, r *http.Request) {
-	if r.Header.Get("Authorization") != *config.ApiSecretKey {
-		log.Println("api: unauthorized: InsertMessage")
-		http.Error(w, "", http.StatusUnauthorized)
+	_, _, reject := authenticate(w, r)
+	if reject {
 		return
 	}
 
@@ -66,7 +63,7 @@ func InsertMessage(w http.ResponseWriter, r *http.Request) {
 		file := &models.File{
 			UploadedByAgentID: newMsg.AgentID,
 			OriginalPath:      filePath,
-			Order: models.ORDER_UPLOAD,
+			Order:             models.ORDER_UPLOAD,
 		}
 		if err := filesRepo.Insert(file); err != nil {
 			fmt.Println("api: error: filesRepo.Insert:", err)
@@ -82,7 +79,7 @@ func InsertMessage(w http.ResponseWriter, r *http.Request) {
 		file := &models.File{
 			UploadedByAgentID: newMsg.AgentID,
 			OriginalPath:      filePath,
-			Order: models.ORDER_DOWNLOAD,
+			Order:             models.ORDER_DOWNLOAD,
 		}
 		if err := filesRepo.Insert(file); err != nil {
 			fmt.Println("api: error: filesRepo.Insert:", err)
