@@ -3,7 +3,7 @@
 
         <div class="chat-actions-bar">
             <v-btn
-                variant="outlined"
+                variant="plain"
                 density="compact"
             >
                 <v-icon icon="mdi-chat-plus" />
@@ -17,7 +17,7 @@
             </v-btn>
 
             <v-btn
-                variant="outlined"
+                variant="plain"
                 density="compact"
             >
                 <v-icon icon="mdi-chat-minus" />
@@ -31,7 +31,7 @@
             </v-btn>
 
             <v-btn
-                variant="outlined"
+                variant="plain"
                 density="compact"
             >
                 <v-icon icon="mdi-account-plus" />
@@ -45,7 +45,7 @@
             </v-btn>
 
             <v-btn
-                variant="outlined"
+                variant="plain"
                 density="compact"
             >
                 <v-icon icon="mdi-account-minus" />
@@ -60,7 +60,7 @@
             </v-btn>
 
             <v-btn
-                variant="outlined"
+                variant="plain"
                 density="compact"
             >
                 <v-icon icon="mdi-delete" />
@@ -74,7 +74,7 @@
             </v-btn>
 
             <v-btn
-                variant="outlined"
+                variant="plain"
                 density="compact"
             >
                 <v-icon icon="mdi-timer-remove" />

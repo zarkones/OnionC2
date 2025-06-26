@@ -1,6 +1,6 @@
 <template>
-    <v-btn @click="gotoUnknownOriginAgents" variant="outlined" density="compact">
-        <v-icon icon="mdi-crosshairs-question" />
+    <v-btn @click="gotoUnknownOriginAgents" variant="plain" density="compact">
+        <v-icon icon="mdi-crosshairs-question" class="mr-1" />
         {{ mockedAgentAmount }}
         <v-tooltip activator="parent" location="top" class="unknown-origin-tooltip" open-delay="600">
             <h4>Unknown Origin</h4>

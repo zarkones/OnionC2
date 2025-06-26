@@ -5,7 +5,7 @@
     </div>
     <div ref="infoCharts" class="info-charts liquid-glass">
         <div class="actions">
-            <v-btn @click="toggleShowStats" density="compact" variant="outlined">
+            <v-btn @click="toggleShowStats" density="compact" variant="plain">
                 <v-icon v-if="hideStats" icon="mdi-chevron-up" />
                 <v-icon v-else icon="mdi-chevron-down" />
             </v-btn>
@@ -14,10 +14,9 @@
 
             <v-spacer />
 
-            <v-btn @click="toggleShowChat" density="compact" variant="outlined">
-                <v-icon v-if="showChat" icon="mdi-chevron-up" />
-                <v-icon v-else icon="mdi-chevron-down" />
-                Chat
+            <v-btn @click="toggleShowChat" density="compact" variant="plain">
+                <v-icon v-if="showChat" icon="mdi-chat" />
+                <v-icon v-else icon="mdi-chat-outline" />
 
                 <v-tooltip activator="parent" location="top" open-delay="600">
                     <div class="tooltip-el">
@@ -28,6 +27,7 @@
                 </v-tooltip>
             </v-btn>
         </div>
+        
         <v-divider v-show="!hideStats" class="mb-1 mt-3" />
         <InfoCharts v-show="!hideStats" />
     </div>
