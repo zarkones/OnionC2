@@ -9,6 +9,11 @@ body {
     overflow: hidden;
 }
 
+.tooltip-el {
+    min-width: 200px;
+    max-width: 340px;
+}
+
 .liquid-glass {
     /* Semi-transparent background for the glass effect */
     background-color: rgba(0, 0, 0, 0.1) !important;

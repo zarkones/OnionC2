@@ -78,3 +78,7 @@ func InsertChannelMessage(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
+
+func DeleteChannelMessages(w http.ResponseWriter, r *http.Request) {
+	// TODO: Delete all messages of a specific channel.
+}

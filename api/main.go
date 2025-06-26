@@ -121,6 +121,7 @@ func startUserFacingService(apiHost *string) (err error) {
 
 	router.HandleFunc("GET /v1/channels/{channelName}/messages", apictrl.GetChannelMessages)
 	router.HandleFunc("PUT /v1/channels/{channelName}/messages", apictrl.InsertChannelMessage)
+	router.HandleFunc("DELETE /v1/channels/{channelName}/messages", apictrl.DeleteChannelMessages)
 
 	router.HandleFunc("PUT /v1/channels/{channelName}/invites/{invitedOperatorUsername}", apictrl.InviteToChannel)
 	router.HandleFunc("DELETE /v1/channels/{channelName}/invites/{invitedOperatorUsername}", apictrl.RemoveFromChannel)

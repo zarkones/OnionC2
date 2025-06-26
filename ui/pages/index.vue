@@ -18,6 +18,14 @@
                 <v-icon v-if="showChat" icon="mdi-chevron-up" />
                 <v-icon v-else icon="mdi-chevron-down" />
                 Chat
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>E2EE Chat</h4>
+                        Opens/Closes end-to-end encrypted chat. This chat is used to securely communicate
+                        with other operators. Not even the C2 server is able to read chat's content.
+                    </div>
+                </v-tooltip>
             </v-btn>
         </div>
         <v-divider v-show="!hideStats" class="mb-1 mt-3" />

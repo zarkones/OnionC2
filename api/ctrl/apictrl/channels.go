@@ -114,7 +114,9 @@ func InsertChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateChannel(w http.ResponseWriter, r *http.Request) {
-	// TODO
+	// TODO: Allow an operator to:
+	// - Change description
+	// - Set when messages should be deleted periodically (deletion timer).
 }
 
 func DeleteChannels(w http.ResponseWriter, r *http.Request) {

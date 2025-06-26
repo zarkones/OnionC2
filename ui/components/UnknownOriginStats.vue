@@ -2,7 +2,7 @@
     <v-btn @click="gotoUnknownOriginAgents" variant="outlined" density="compact">
         <v-icon icon="mdi-crosshairs-question" />
         {{ mockedAgentAmount }}
-        <v-tooltip activator="parent" location="top" class="unknown-origin-tooltip">
+        <v-tooltip activator="parent" location="top" class="unknown-origin-tooltip" open-delay="600">
             <h4>Unknown Origin</h4>
             There {{ mockedAgentAmount === 1 ? 'is' : 'are' }} {{ mockedAgentAmount }}
             {{ mockedAgentAmount === 1 ? 'agent who\'s' : 'agents whose' }} IP {{ mockedAgentAmount === 1 ? 'address is' : 'addresses are' }} not yet known.

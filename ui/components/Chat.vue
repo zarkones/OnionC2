@@ -1,10 +1,103 @@
 <template>
     <div class="liquid-glass" style="width: 100%; height: 100%;">
+
+        <div class="chat-actions-bar">
+            <v-btn
+                variant="outlined"
+                density="compact"
+            >
+                <v-icon icon="mdi-chat-plus" />
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>Channel Creation</h4>
+                        Create a new chat channel.
+                    </div>
+                </v-tooltip>
+            </v-btn>
+
+            <v-btn
+                variant="outlined"
+                density="compact"
+            >
+                <v-icon icon="mdi-chat-minus" />
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>Channel Removal</h4>
+                        Removes a chat channel. This would also delete all messages of that channel form the C2 server.
+                    </div>
+                </v-tooltip>
+            </v-btn>
+
+            <v-btn
+                variant="outlined"
+                density="compact"
+            >
+                <v-icon icon="mdi-account-plus" />
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>Invite To Channel</h4>
+                        Invite an operator to a chat channel.
+                    </div>
+                </v-tooltip>
+            </v-btn>
+
+            <v-btn
+                variant="outlined"
+                density="compact"
+            >
+                <v-icon icon="mdi-account-minus" />
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>Remove From Channel</h4>
+                        Remove an operator from a chat channel. This would trigger
+                        rotation of channel's encryption secret.
+                    </div>
+                </v-tooltip>
+            </v-btn>
+
+            <v-btn
+                variant="outlined"
+                density="compact"
+            >
+                <v-icon icon="mdi-delete" />
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>Delete Messages</h4>
+                        Delete messages of a specific chat.
+                    </div>
+                </v-tooltip>
+            </v-btn>
+
+            <v-btn
+                variant="outlined"
+                density="compact"
+            >
+                <v-icon icon="mdi-timer-remove" />
+
+                <v-tooltip activator="parent" location="top" open-delay="600">
+                    <div class="tooltip-el">
+                        <h4>Time-based Messages Deletion</h4>
+                        Configure periodic deletion of messages.
+                    </div>
+                </v-tooltip>
+            </v-btn>
+
+            <v-spacer />
+        </div>
+
+        <v-divider />
+
         <v-row class="full-height">
             <v-col cols="4" class="channels-col">
                 <div class="categories-wrapper">
                     <div v-for="category in channelCategories" :key="category" class="chat-expansion-panel">
-                        <h3 class="chat-category-label">{{ category }}</h3>
+                        <h3 class="chat-category-label">{{ category.toUpperCase() }}</h3>
+                        
                         <div class="chat-channels">
                             <v-btn
                                 v-for="channel in channels[category]" 
@@ -19,6 +112,7 @@
                     </div>
                 </div>
             </v-col>
+            
             <v-col class="channel-messages-container">
                 <div class="messages-wrapper">
                     <div v-for="(msg, msgIndex) in mockedMessages" :key="msgIndex" class="message">
@@ -30,9 +124,11 @@
                     variant="outlined"
                     density="compact"
                     placeholder="Send Message"
+                    class="mt-3"
                 />
             </v-col>
         </v-row>
+
     </div>
 </template>
 
@@ -85,7 +181,7 @@ const channelCategories = computed(() => Object.keys(channels) as ChannelKey[])
 .channel-messages-container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100% - 40px);
     padding-top: 32px;
     padding-right: 32px;
     padding-bottom: 0px;
@@ -114,5 +210,12 @@ const channelCategories = computed(() => Object.keys(channels) as ChannelKey[])
 .categories-wrapper {
     flex-grow: 1;
     overflow-y: auto;
+}
+
+.chat-actions-bar {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    margin: 16px;
 }
 </style>
