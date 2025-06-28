@@ -1,26 +1,17 @@
 <template>
+    <MapSvg style="position: absolute;"></MapSvg>
+
     <v-data-table
         :headers="(headers as any)"
         :items="mockedTableData"
         density="compact"
         item-key="name"
-        class="table-el"
+        class="table-el liquid-glass"
     >
         <template v-slot:item.actions="{ item }">
-            <v-btn
-                variant="plain"
-                density="compact"
-            >
-                <v-icon icon="mdi-console" />
-
-                <v-tooltip activator="parent" location="top" open-delay="600">
-                    <div class="tooltip-el">
-                        <h4>Channel Creation</h4>
-                        Create a new chat channel.
-                    </div>
-                </v-tooltip>
-            </v-btn>
+            <ControlAgentDialog />
         </template>
+
     </v-data-table>
 </template>
 
@@ -137,7 +128,9 @@ const mockedTableData = [
 
 .table-el {
     padding-top: 48px;
-    height: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0px;
 }
 
 </style>

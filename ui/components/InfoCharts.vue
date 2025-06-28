@@ -13,7 +13,7 @@
             <div> <Pie :data="dataCpus" :options="options" /> </div>
         </v-col>
         <v-col>
-            <span>Agents Trough Time</span>
+            <span>Agents Through Time</span>
             <Line :data="dataStats" :options="options" />
         </v-col>
     </v-row>
