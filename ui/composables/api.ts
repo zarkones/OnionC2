@@ -36,11 +36,11 @@ export const API = ref(new class {
         this.privateKey = null
         this.store = {
             operators: {
-                data: [] as Operator[],
+                data: ref([] as Operator[]),
                 page: 0,
             },
             agents: {
-                data: [] as Agent[],
+                data: ref([] as Agent[]),
                 page: 0,
             },
         }
@@ -50,10 +50,11 @@ export const API = ref(new class {
 
     private initializePeriodicDataFetching = () => {
         setInterval(async () => {
-            await Promise.all([
-                async () => this.store.agents.data = await this.fetchAgents(this.store.agents.page),
-                async () => this.store.operators.data = await this.fetchOperators(this.store.operators.page),
-            ])
+            if (this.privateKey === null || this.c2HostURL.length === 0 || this.username.length === 0) {
+                return
+            }
+            this.store.agents.data.value = await this.fetchAgents(this.store.agents.page)
+            this.store.operators.data.value = await this.fetchOperators(this.store.operators.page)
         }, 14000)
     }
 

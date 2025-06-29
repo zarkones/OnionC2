@@ -187,7 +187,7 @@ async fn main() {
             let system_information = helpers::get_system_information();
             let ip_address = ""; // TODO
 
-            let id_resp = match register(&hostname, os_name, sys_arch, &system_information.os_version, &system_information.cpu_info, ip_address, &system_information.memory, &mut stream).await {
+            let id_resp = match register(&hostname, os_name, sys_arch, &system_information.os_version, &system_information.cpu_names_only, ip_address, &system_information.memory, &mut stream).await {
                 Ok(id_resp) => id_resp,
                 Err(e) => {
                     debug_eprintln!("registration error: {}", e);

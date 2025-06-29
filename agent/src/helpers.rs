@@ -241,6 +241,7 @@ pub struct SystemInformation {
     pub is_ac_power: String,
     pub cpu_temperature: String,
     pub cpu_info: String,
+    pub cpu_names_only: String,
     pub os_version: String,
 }
 
@@ -249,7 +250,7 @@ pub fn get_system_information() -> SystemInformation {
     let sys = System::new();
 
     let memory = match sys.memory() {
-        Ok(memory) => format!("{:?}", memory.total),
+        Ok(memory) => format!("{}", memory.total),
         Err(e) => format!("Error: {}", e),
     };
     let mut networks_error = String::new();
@@ -292,11 +293,16 @@ pub fn get_system_information() -> SystemInformation {
 
     // First we update all information of our `System` struct.
     sys.refresh_all();
+
+    let mut cpu_names_only = Vec::new();
     
     let mut cpus = String::new();
     for cpu in sys.cpus() {
         cpus += &format!("CPU: Name: {} | Brand: {} | Freq.: {}\n", cpu.name(), cpu.brand(), cpu.frequency());
+        cpu_names_only.push(cpu.brand());
     }
+
+    cpu_names_only.dedup();
 
     let information = SystemInformation{
         memory: memory,
@@ -305,6 +311,7 @@ pub fn get_system_information() -> SystemInformation {
         networks: network_names,
         cpu_temperature: cpu_temperature,
         cpu_info: cpus,
+        cpu_names_only: cpu_names_only.join(", "),
         os_version: match sysinfo::System::os_version() {
             Some(v) => v,
             None => "".into(),
