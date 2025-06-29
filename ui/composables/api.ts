@@ -17,17 +17,49 @@ export type Agent = {
     lastSeen: number
 }
 
+export type Operator = {
+    username: string
+    publicKeyHex: string
+    createdAt: number
+}
+
 export const API = ref(new class {
     public username: string
     public c2HostURL: string
     
     private privateKey: CryptoKey | null
+    private store
     
     constructor() {
         this.username = ''
         this.c2HostURL = ''
         this.privateKey = null
+        this.store = {
+            operators: {
+                data: [] as Operator[],
+                page: 0,
+            },
+            agents: {
+                data: [] as Agent[],
+                page: 0,
+            },
+        }
+
+        this.initializePeriodicDataFetching()
     }
+
+    private initializePeriodicDataFetching = () => {
+        setInterval(async () => {
+            await Promise.all([
+                async () => this.store.agents.data = await this.fetchAgents(this.store.agents.page),
+                async () => this.store.operators.data = await this.fetchOperators(this.store.operators.page),
+            ])
+        }, 14000)
+    }
+
+    public getAgents = () => this.store.agents
+
+    public getOperators = () => this.store.operators
 
     public setPrivateKey = async (pemEncodedPrivateKey: string) => {
         // Converting from older PKCS#1 to PKCSSss8 header.
@@ -43,7 +75,7 @@ export const API = ref(new class {
         }
         const jwt = await new jose.SignJWT(data)
             .setProtectedHeader({ alg: 'RS512' })
-            .setExpirationTime('1d')
+            .setExpirationTime('3min')
             .setNotBefore(0)
             .sign(this.privateKey)
         return jwt
@@ -57,7 +89,7 @@ export const API = ref(new class {
         return payload
     }
 
-    public getAgents = async (page: number) => {
+    private fetchAgents = async (page: number) => {
         const tokenPayload: JWTPayload = {
             u: this.username,
         } 
@@ -74,5 +106,24 @@ export const API = ref(new class {
         }
 
         return await response.json() as Agent[]
+    }
+
+    private fetchOperators = async (page: number) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        } 
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/operators?page=${page}`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as Operator[]
     }
 }())

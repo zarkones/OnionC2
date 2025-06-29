@@ -44,6 +44,7 @@
                                 @update:model-value="updatePrivateKey"
                                 variant="outlined"
                                 density="compact"
+                                :error="keyParsingErrored"
                                 label="Operator's Private Key (Hex Encoded)"
                             />
                         </v-tabs-window-item>
@@ -63,6 +64,7 @@ const tabs = {
 
 const tab = ref('')
 const privateKeyHexPem = ref('')
+const keyParsingErrored = ref(false)
 
 const updatePrivateKey = async () => {
     try {
@@ -71,13 +73,11 @@ const updatePrivateKey = async () => {
         const decoder = new TextDecoder('utf-8')
         const pemEncodedKey = decoder.decode(bytes)
         await API.value.setPrivateKey(pemEncodedKey)
+        keyParsingErrored.value = false
     } catch(e) {
         console.error('failed to parse private key from hex:', e)
+        keyParsingErrored.value = true
     }
-
-    await API.value.getAgents(0).then(agents => {
-        console.log(agents)
-    })
 }
 
 </script>
