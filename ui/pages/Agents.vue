@@ -10,7 +10,9 @@
         fixed-header
     >
         <template v-slot:item.actions="{ item }">
-            <ControlAgentDialog />
+            <ControlAgentDialog
+                :agentId="item.id"
+            />
         </template>
 
     </v-data-table-virtual>

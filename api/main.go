@@ -114,7 +114,7 @@ func startUserFacingService(apiHost *string) (err error) {
 	router.HandleFunc("GET /v1/operators", apictrl.GetOperators)
 
 	router.HandleFunc("GET /v1/messages/{agentID}", apictrl.GetMessages)
-	router.HandleFunc("POST /v1/messages", apictrl.InsertMessage)
+	router.HandleFunc("PUT /v1/messages", apictrl.InsertMessage)
 
 	router.HandleFunc("GET /v1/channels", apictrl.GetChannels)
 	router.HandleFunc("PUT /v1/channels", apictrl.InsertChannel)

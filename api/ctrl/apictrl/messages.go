@@ -2,12 +2,14 @@ package apictrl
 
 import (
 	"api/models"
+	"api/repos"
 	"api/repos/filesRepo"
 	"api/repos/messagesRepo"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -20,7 +22,15 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 
 	agentID := r.PathValue("agentID")
 
-	messages, err := messagesRepo.GetMultiple(agentID)
+	q := r.URL.Query()
+	page, _ := strconv.Atoi(q.Get("page"))
+	limit, err := strconv.Atoi(q.Get("limit"))
+	if err != nil {
+		limit = repos.DEFAULT_LIMIT
+	}
+	offset := page * limit
+
+	messages, err := messagesRepo.GetMultiple(agentID, offset, limit)
 	if err != nil {
 		log.Println("api: error: GetMessages:", err)
 		http.Error(w, "", http.StatusInternalServerError)

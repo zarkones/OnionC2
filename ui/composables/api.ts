@@ -23,6 +23,14 @@ export type Operator = {
     createdAt: number
 }
 
+export type Message = {
+    id: string
+    agentId: string
+    request: string
+    response: string
+    createdAt: string
+}
+
 export const API = ref(new class {
     public username: string
     public c2HostURL: string
@@ -43,6 +51,11 @@ export const API = ref(new class {
                 data: ref([] as Agent[]),
                 page: 0,
             },
+            messages: {
+                data: ref([] as Message[]),
+                page: 0,
+                agentId: ''
+            },
         }
 
         this.initializePeriodicDataFetching()
@@ -55,12 +68,13 @@ export const API = ref(new class {
             }
             this.store.agents.data.value = await this.fetchAgents(this.store.agents.page)
             this.store.operators.data.value = await this.fetchOperators(this.store.operators.page)
+            this.store.messages.data.value = await this.fetchMessages(this.store.messages.agentId, this.store.messages.page)
         }, 14000)
     }
 
     public getAgents = () => this.store.agents
-
     public getOperators = () => this.store.operators
+    public getMessages = () => this.store.messages
 
     public setPrivateKey = async (pemEncodedPrivateKey: string) => {
         // Converting from older PKCS#1 to PKCSSss8 header.
@@ -90,10 +104,53 @@ export const API = ref(new class {
         return payload
     }
 
+    public sendMessage = async (agentId: string, content: string) => {
+        const body: Partial<Message> = {
+            agentId,
+            request: content,
+        }
+
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/messages`, {
+            method: 'PUT',
+            headers: {
+                Authorization: token,
+            },
+            body: JSON.stringify(body),
+        })
+
+        if (response.status !== 201) {
+            throw Error(`unexpected status code: ${response.statusText}`)
+        }
+    }
+
+    public fetchMessages = async (agentId: string, page: number) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/messages/${agentId}?page=${page}`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as Message[]
+    }
+
     private fetchAgents = async (page: number) => {
         const tokenPayload: JWTPayload = {
             u: this.username,
-        } 
+        }
 
         const token = await this.sign(tokenPayload)
         const response = await fetch(`${this.c2HostURL}/v1/agents?page=${page}`, {
@@ -112,7 +169,7 @@ export const API = ref(new class {
     private fetchOperators = async (page: number) => {
         const tokenPayload: JWTPayload = {
             u: this.username,
-        } 
+        }
 
         const token = await this.sign(tokenPayload)
         const response = await fetch(`${this.c2HostURL}/v1/operators?page=${page}`, {

@@ -8,8 +8,12 @@ import (
 
 var ErrMsgRespPopulated = errors.New("message's response is already populated")
 
-func GetMultiple(agentID string) (messages []models.Message, err error) {
-	return messages, db.ORM.Where("agent_id = ?", agentID).Find(&messages).Error
+func GetMultiple(agentID string, offset, limit int) (messages []models.Message, err error) {
+	return messages, db.ORM.
+		Where("agent_id = ?", agentID).
+		Offset(offset).
+		Limit(limit).
+		Find(&messages).Error
 }
 
 func GetMultipleForAgent(agentID string) (messages []models.Message, err error) {
