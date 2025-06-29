@@ -2,6 +2,7 @@ package crypto
 
 import (
 	"api/models"
+	"api/repos/permissionsRepo"
 	"encoding/hex"
 	"errors"
 	"strings"
@@ -52,6 +53,31 @@ func CreateAdminOperator(username string) (operator models.Operator, recoveryWor
 	encryptedPrivateKey, err := cry.EncryptAESEncodeHex([]byte(serializedPrivateKey), []byte(NormalizeWordPhrase(wordPhrase)))
 	if err != nil {
 		return operator, nil, "", err
+	}
+
+	allowedPermissions := []models.PermissionKey{
+		models.PERMISSION_AGENTS_LIST,
+		models.PERMISSION_AGENTS_LIST_MESSAGES,
+		models.PERMISSION_AGENTS_INSERT_MESSAGE,
+		models.PERMISSION_CHAT_LIST_CHANNELS,
+		models.PERMISSION_CHAT_LIST_CHANNEL_MESSAGES,
+		models.PERMISSION_CHAT_INSERT_CHANNEL,
+		models.PERMISSION_CHAT_INSERT_CHANNEL_MESSAGE,
+		models.PERMISSION_CHAT_DELETE_CHANNEL,
+		models.PERMISSION_CHAT_DELETE_CHANNEL_MESSAGE,
+		models.PERMISSION_USER_INSERT,
+		models.PERMISSION_USER_DELETE,
+		models.PERMISSION_INSERT,
+		models.PERMISSION_DELETE,
+	}
+
+	for _, key := range allowedPermissions {
+		if err := permissionsRepo.Insert(&models.Permission{
+			Username: username,
+			Key:      key,
+		}); err != nil {
+			return operator, nil, "", err
+		}
 	}
 
 	return models.Operator{

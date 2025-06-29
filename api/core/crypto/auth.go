@@ -40,7 +40,7 @@ func VerifyToken(rawToken string) (username string, permissions []models.Permiss
 		return "", nil, err
 	}
 
-	var insecurePayload map[string]string
+	var insecurePayload map[string]any
 
 	if err := json.Unmarshal(insecurePayloadJsonStr, &insecurePayload); err != nil {
 		return "", nil, err
@@ -60,7 +60,7 @@ func VerifyToken(rawToken string) (username string, permissions []models.Permiss
 		return "", nil, err
 	}
 
-	token, err := jwt.Parse(rawToken, func(t *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(rawToken, func(t *jwt.Token) (any, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, ErrInvalidSigningAlg
 		}
