@@ -3,6 +3,7 @@ package c2ctrl
 import (
 	"api/config"
 	"api/models"
+	"api/repos/agentsRepo"
 	"api/repos/filesRepo"
 	"io"
 	"log"
@@ -21,6 +22,10 @@ func DownloadFile(w http.ResponseWriter, r *http.Request) {
 		log.Println("c2: error: DownloadFileOrder.filesRepo.Get:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
+	}
+
+	if err := agentsRepo.UpdateLastSeen(file.AgentID); err != nil {
+		log.Println("failed to update 'last seen' for agent:", file.AgentID, err)
 	}
 
 	if file.Order != models.ORDER_DOWNLOAD {
@@ -66,6 +71,10 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		log.Println("c2: error: UploadFile.filesRepo.Get:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
+	}
+
+	if err := agentsRepo.UpdateLastSeen(file.AgentID); err != nil {
+		log.Println("failed to update 'last seen' for agent:", file.AgentID, err)
 	}
 
 	if file.Order != models.ORDER_UPLOAD {

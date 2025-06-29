@@ -13,12 +13,12 @@ const (
 )
 
 type File struct {
-	ID                string `json:"id" gorm:"primaryKey"`
-	UploadedByAgentID string `json:"uploadedByAgentId"`
-	OriginalPath      string `json:"originalPath"`
-	Order             int    `json:"order"`
-	CompletedAt       int64  `json:"completedAt"`
-	CreatedAt         int64  `json:"createdAt"`
+	ID           string `json:"id" gorm:"primaryKey"`
+	AgentID      string `json:"agentId"`
+	OriginalPath string `json:"originalPath"`
+	Order        int    `json:"order"`
+	CompletedAt  int64  `json:"completedAt"`
+	CreatedAt    int64  `json:"createdAt"`
 }
 
 func (f *File) BeforeCreate(tx *gorm.DB) (err error) {

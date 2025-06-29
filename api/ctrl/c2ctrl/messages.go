@@ -1,6 +1,7 @@
 package c2ctrl
 
 import (
+	"api/repos/agentsRepo"
 	"api/repos/messagesRepo"
 	"encoding/json"
 	"log"
@@ -10,6 +11,10 @@ import (
 // GetMessages returns messages specific to an agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
 	agentID := r.PathValue("agentID")
+
+	if err := agentsRepo.UpdateLastSeen(agentID); err != nil {
+		log.Println("failed to update 'last seen' for agent:", agentID, err)
+	}
 
 	messages, err := messagesRepo.GetMultipleForAgent(agentID)
 	if err != nil {
@@ -53,10 +58,15 @@ func InsertMessageResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := messagesRepo.UpdateResponse(newMsg.MessageID, newMsg.Response); err != nil {
+	agentID, err := messagesRepo.UpdateResponse(newMsg.MessageID, newMsg.Response)
+	if err != nil {
 		log.Println("c2: error: messagesRepo.UpdateResponse:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
+	}
+
+	if err := agentsRepo.UpdateLastSeen(agentID); err != nil {
+		log.Println("failed to update 'last seen' for agent:", agentID, err)
 	}
 
 	w.WriteHeader(http.StatusOK)

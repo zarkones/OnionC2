@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 )
 
 // InsertAgent allows an agent to registed with the C2 server.
@@ -21,6 +22,8 @@ func InsertAgent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "hostname is empty", http.StatusUnprocessableEntity)
 		return
 	}
+
+	newAgent.LastSeen = time.Now().UnixNano()
 
 	if err := agentsRepo.Insert(&newAgent); err != nil {
 		log.Println("error: InsertAgent: agentsRepo.Insert:", err)

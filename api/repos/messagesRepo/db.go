@@ -20,14 +20,14 @@ func Insert(message *models.Message) (err error) {
 	return db.ORM.Create(&message).Error
 }
 
-func UpdateResponse(messageID, response string) (err error) {
+func UpdateResponse(messageID, response string) (agentID string, err error) {
 	var message models.Message
 	if err := db.ORM.Table("messages").Where("id = ?", messageID).First(&message).Error; err != nil {
-		return err
+		return "", err
 	}
 	if message.Response != "" {
-		return ErrMsgRespPopulated
+		return "", ErrMsgRespPopulated
 	}
 	message.Response = response
-	return db.ORM.Save(message).Error
+	return message.AgentID, db.ORM.Save(message).Error
 }
