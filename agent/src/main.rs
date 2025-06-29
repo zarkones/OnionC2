@@ -29,6 +29,12 @@ struct RegisterRequest {
     hostname: String,
     os: String,
     arch: String,
+    ip: String,
+    ram: String,
+    #[serde(rename = "osVersion")]
+    os_version: String,
+    #[serde(rename = "cpuName")]
+    cpu_name: String,
 }
 
 #[derive(Deserialize)]
@@ -178,7 +184,10 @@ async fn main() {
         };
 
         if id.len() == 0 {
-            let id_resp = match register(&hostname, os_name, sys_arch, &mut stream).await {
+            let system_information = helpers::get_system_information();
+            let ip_address = ""; // TODO
+
+            let id_resp = match register(&hostname, os_name, sys_arch, &system_information.os_version, &system_information.cpu_info, ip_address, &system_information.memory, &mut stream).await {
                 Ok(id_resp) => id_resp,
                 Err(e) => {
                     debug_eprintln!("registration error: {}", e);
@@ -415,11 +424,15 @@ async fn main() {
 }
 
 #[inline]
-async fn register(hostname: &String, os: &str, arch: &str, stream: &mut DataStream) -> Result<RegisterResponse> {
+async fn register(hostname: &String, os: &str, arch: &str, os_version: &str, cpu_name: &str, ip: &str, ram: &str, stream: &mut DataStream) -> Result<RegisterResponse> {
     let identity = RegisterRequest{
         hostname: hostname.clone(),
         os: os.to_string(),
         arch: arch.to_string(),
+        ip: ip.to_string(),
+        os_version: os_version.to_string(),
+        cpu_name: cpu_name.to_string(),
+        ram: ram.to_string(),
     };
 
     let json_identity = match serde_json::to_string(&identity) {

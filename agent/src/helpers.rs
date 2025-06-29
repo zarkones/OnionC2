@@ -241,6 +241,7 @@ pub struct SystemInformation {
     pub is_ac_power: String,
     pub cpu_temperature: String,
     pub cpu_info: String,
+    pub os_version: String,
 }
 
 #[inline]
@@ -304,6 +305,10 @@ pub fn get_system_information() -> SystemInformation {
         networks: network_names,
         cpu_temperature: cpu_temperature,
         cpu_info: cpus,
+        os_version: match sysinfo::System::os_version() {
+            Some(v) => v,
+            None => "".into(),
+        },
     };
 
     return information;
