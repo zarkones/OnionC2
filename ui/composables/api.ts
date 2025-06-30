@@ -28,7 +28,7 @@ export type Message = {
     agentId: string
     request: string
     response: string
-    createdAt: string
+    createdAt: number
 }
 
 export const API = ref(new class {
@@ -36,48 +36,64 @@ export const API = ref(new class {
     public c2HostURL: string
     
     private privateKey: CryptoKey | null
-    private store
+    public store
     
     constructor() {
-        this.username = ''
-        this.c2HostURL = ''
+        this.username = 'zarkones3'
+        this.c2HostURL = 'http://localhost:8080'
         this.privateKey = null
-        this.store = {
+        this.store = ref({
             operators: {
-                data: ref([] as Operator[]),
+                data:[] as Operator[],
                 page: 0,
             },
             agents: {
-                data: ref([] as Agent[]),
+                data:[] as Agent[],
                 page: 0,
             },
             messages: {
-                data: ref([] as Message[]),
-                page: 0,
-                agentId: ''
+                newMessageCallback: () => {},
+                data:[] as Message[],
+                agentId: '',
+                lastSentAt: 0,
+                page: undefined as number | undefined,
+                since: undefined as string | undefined,
             },
-        }
+        })
 
         this.initializePeriodicDataFetching()
     }
 
-    private initializePeriodicDataFetching = () => {
-        setInterval(async () => {
+    private initializePeriodicDataFetching = async () => {
+        const generalUpdate = async () => {
             if (this.privateKey === null || this.c2HostURL.length === 0 || this.username.length === 0) {
                 return
             }
-            this.store.agents.data.value = await this.fetchAgents(this.store.agents.page)
-            this.store.operators.data.value = await this.fetchOperators(this.store.operators.page)
-            this.store.messages.data.value = await this.fetchMessages(this.store.messages.agentId, this.store.messages.page)
-        }, 14000)
+
+            this.store.value.agents.data = await this.fetchAgents(this.store.value.agents.page)
+            this.store.value.operators.data = await this.fetchOperators(this.store.value.operators.page)
+        }
+
+        await generalUpdate()
+
+        setInterval(async () => {
+            await generalUpdate()
+        }, 3000)
     }
 
-    public getAgents = () => this.store.agents
-    public getOperators = () => this.store.operators
-    public getMessages = () => this.store.messages
+    public clearMessages = () => {
+        this.store.value.messages = {
+            newMessageCallback: () => {},
+            lastSentAt: 0,
+            agentId: '',
+            data: [],
+            page: undefined,
+            since: undefined,
+        }
+    }
 
     public setPrivateKey = async (pemEncodedPrivateKey: string) => {
-        // Converting from older PKCS#1 to PKCSSss8 header.
+        // Converting from older PKCS#1 to PKCSS#8 header.
         pemEncodedPrivateKey = pemEncodedPrivateKey.replaceAll('-----BEGIN RSA PRIVATE KEY-----', '-----BEGIN PRIVATE KEY-----')
         pemEncodedPrivateKey = pemEncodedPrivateKey.replaceAll('-----END RSA PRIVATE KEY-----', '-----END PRIVATE KEY-----')
 
@@ -126,25 +142,39 @@ export const API = ref(new class {
         if (response.status !== 201) {
             throw Error(`unexpected status code: ${response.statusText}`)
         }
+
+        this.store.value.messages.lastSentAt = Date.now()
     }
 
-    public fetchMessages = async (agentId: string, page: number) => {
+    public fetchMessages = async (agentId: string, options: { page: number | undefined, since: string | undefined }) => {
+        if (agentId.length === 0) {
+            return { since: "", messages: [] }
+        }
+        
         const tokenPayload: JWTPayload = {
             u: this.username,
         }
 
         const token = await this.sign(tokenPayload)
-        const response = await fetch(`${this.c2HostURL}/v1/messages/${agentId}?page=${page}`, {
+
+        const queryParams = [
+            typeof options.page !== undefined ? `page=${options.page}` : '',
+            typeof options.since !== undefined ? `since=${options.since}` : '',
+        ]
+
+        const response = await fetch(`${this.c2HostURL}/v1/messages/${agentId}?${queryParams.join('&')}`, {
             headers: {
                 Authorization: token,
             }
         })
 
         if (response.status === 204) {
-            return []
+            return { since: "", messages: [] }
         }
 
-        return await response.json() as Message[]
+        const r = await response.json() as { since: string, messages: Message[] } 
+        
+        return { ...r, messages: r.messages.reverse() }
     }
 
     private fetchAgents = async (page: number) => {

@@ -3,7 +3,7 @@
 
     <v-data-table-virtual
         :headers="(headers as any)"
-        :items="API.getAgents().data.value"
+        :items="API.store.agents.data"
         density="compact"
         item-key="name"
         class="table-el liquid-glass"

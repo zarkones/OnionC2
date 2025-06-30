@@ -8,11 +8,12 @@ import (
 )
 
 type Message struct {
-	ID                  string `json:"id" gorm:"primaryKey"`
-	AgentID             string `json:"agentId"`
-	Request             string `json:"request"`
-	Response            string `json:"response"`
-	CreatedAt           int64  `json:"createdAt"`
+	ID        string `json:"id" gorm:"primaryKey"`
+	AgentID   string `json:"agentId"`
+	Request   string `json:"request"`
+	Response  string `json:"response"`
+	CreatedAt int64  `json:"createdAt"`
+	UpdatedAt int64  `json:"updatedAt"`
 }
 
 func (m *Message) BeforeCreate(tx *gorm.DB) (err error) {

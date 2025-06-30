@@ -13,6 +13,11 @@ import (
 	"strings"
 )
 
+type GetMessagesRespCtx struct {
+	Messages []models.Message `json:"messages"`
+	Since    string           `json:"since"`
+}
+
 // GetMessages returns messages exchanged with a specific agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
 	_, _, reject := authenticateAndAuthorize(w, r, models.PERMISSION_AGENTS_LIST_MESSAGES, nil)
@@ -23,6 +28,7 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 	agentID := r.PathValue("agentID")
 
 	q := r.URL.Query()
+	since, errSince := strconv.ParseInt(q.Get("since"), 10, 64)
 	page, _ := strconv.Atoi(q.Get("page"))
 	limit, err := strconv.Atoi(q.Get("limit"))
 	if err != nil {
@@ -30,7 +36,14 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 	}
 	offset := page * limit
 
-	messages, err := messagesRepo.GetMultiple(agentID, offset, limit)
+	var messages []models.Message
+
+	if errSince == nil {
+		messages, err = messagesRepo.GetMultipleSince(agentID, int64(since), limit)
+	} else {
+		messages, err = messagesRepo.GetMultiple(agentID, offset, limit)
+	}
+
 	if err != nil {
 		log.Println("api: error: GetMessages:", err)
 		http.Error(w, "", http.StatusInternalServerError)
@@ -42,7 +55,12 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&messages); err != nil {
+	resp := GetMessagesRespCtx{
+		Messages: messages,
+		Since:    fmt.Sprint(messages[len(messages)-1].CreatedAt),
+	}
+
+	if err := json.NewEncoder(w).Encode(&resp); err != nil {
 		log.Println("api: error: serializing response:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // GetMessages returns messages specific to an agent.
@@ -28,11 +29,17 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&messages); err != nil {
+	body, err := json.Marshal(&messages)
+	if err != nil {
 		log.Println("c2: error: serializing response:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+
+	// Agent doesn't support chunking...
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+	w.Header().Del("Transfer-Encoding")
+	w.Write(body)
 }
 
 type AgentMsgRespCtx struct {
