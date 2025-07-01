@@ -17,8 +17,9 @@
 
                 <v-tooltip activator="parent" location="top" open-delay="600">
                     <div class="tooltip-el">
-                        <h4>todo</h4>
-                        // TODO
+                        <h4>Open Agent's Dialog</h4>
+                        Opens up a dialog used for interacting with an agent.
+                        This includes access to shell terminal, file browser, etc... 
                     </div>
                 </v-tooltip>
             </v-btn>
@@ -27,6 +28,21 @@
         <v-card class="liquid-glass" density="compact" >
             <v-toolbar density="compact" class="liquid-glass">
                 <v-toolbar-items>
+                    <v-btn
+                        @click="systemDetailsCommand"
+                        variant="plain"
+                        density="compact"
+                    >
+                        <v-icon icon="mdi-card-account-details" />
+
+                        <v-tooltip activator="parent" location="top" open-delay="600">
+                            <div class="tooltip-el">
+                                <h4>System Details</h4>
+                                Makes an agent return information about CPU, RAM, networks, etc...
+                            </div>
+                        </v-tooltip>
+                    </v-btn>
+
                     <v-btn
                         variant="plain"
                         density="compact"
@@ -146,7 +162,10 @@ const terminalInput = ref() as Ref<HTMLElement | HTMLElement>
 const commands = {
     READ_CLIPBOARD: {
         cmd: '/read-clipboard',
-    }
+    },
+    SYSTEM_DETAILS: {
+        cmd: '/system-details',
+    },
 } as const
 
 const toggleExecutionAwaiting = () => {
@@ -162,12 +181,27 @@ const scrollToBottom = async () => {
     }
 }
 
+const systemDetailsCommand = async () => {
+    loading.value = true
+
+    try {
+        await API.value.sendMessage(props.agentId, commands.SYSTEM_DETAILS.cmd)
+        await scrollToBottom()
+    } catch(e) {
+        console.error('failed to send message:', e)
+        // TODO: Issue visual error notification.
+    } finally {
+        loading.value = false
+    }
+
+    await fetchMessages()
+}
+
 const grabClipboardCommand = async () => {
     loading.value = true
 
     try {
         await API.value.sendMessage(props.agentId, commands.READ_CLIPBOARD.cmd)
-        command.value = ''
         await scrollToBottom()
     } catch(e) {
         console.error('failed to send message:', e)
