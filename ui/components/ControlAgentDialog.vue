@@ -57,6 +57,7 @@
                     </v-btn>
 
                     <v-btn
+                        @click="grabClipboardCommand"
                         variant="plain"
                         density="compact"
                     >
@@ -65,7 +66,7 @@
                         <v-tooltip activator="parent" location="top" open-delay="600">
                             <div class="tooltip-el">
                                 <h4>Grab Clipboard</h4>
-                                Grab text copied into the clipboard.
+                                Read text copied into the clipboard.
                             </div>
                         </v-tooltip>
                     </v-btn>
@@ -84,13 +85,17 @@
                     v-for="msg in API.store.messages.data"
                     :data="msg.id"
                 >
-                    <h4>{{ msg.request }}</h4>
+                    <h4>
+                        <v-icon icon="mdi-console-line" class="mr-1 pb-1" />
+                        {{ msg.request }}
+                    </h4>
                     {{ msg.response }}
                 </p>
             </div>
 
             <v-card-actions class="terminal-actions">
                 <v-text-field
+                    ref="terminalInput"
                     v-model="command"
                     variant="outlined"
                     density="compact"
@@ -99,6 +104,7 @@
                     :disabled="loading"
                     @keyup.enter="sendCommand"
                 />
+
                 <v-btn
                     @click="toggleExecutionAwaiting"
                     variant="plain"
@@ -135,6 +141,13 @@ const awaitExecution = ref(true)
 const command = ref('')
 const loading = ref(false)
 const terminalOutput = ref() as Ref<HTMLElement | HTMLElement>
+const terminalInput = ref() as Ref<HTMLElement | HTMLElement>
+
+const commands = {
+    READ_CLIPBOARD: {
+        cmd: '/read-clipboard',
+    }
+} as const
 
 const toggleExecutionAwaiting = () => {
     awaitExecution.value = !awaitExecution.value
@@ -149,8 +162,24 @@ const scrollToBottom = async () => {
     }
 }
 
+const grabClipboardCommand = async () => {
+    loading.value = true
+
+    try {
+        await API.value.sendMessage(props.agentId, commands.READ_CLIPBOARD.cmd)
+        command.value = ''
+        await scrollToBottom()
+    } catch(e) {
+        console.error('failed to send message:', e)
+        // TODO: Issue visual error notification.
+    } finally {
+        loading.value = false
+    }
+
+    await fetchMessages()
+}
+
 const sendCommand = async () => {
-    console.log('sending command')
     if (command.value.length === 0) {
         return
     }
@@ -168,6 +197,15 @@ const sendCommand = async () => {
         loading.value = false
     }
 
+    await fetchMessages()
+
+    if (terminalInput && terminalInput.value) {
+        await nextTick()
+        terminalInput.value.focus()
+    }
+}
+
+const fetchMessages = async () => {
     const newMessages = await API.value.fetchMessages(props.agentId, { page: 0, before: undefined, after: API.value.store.messages.after })
     if (newMessages.messages.length !== 0) {
         API.value.store.messages.after = newMessages.after
@@ -265,6 +303,9 @@ const selected = async () => {
     max-height: 100%;
     overflow-y: auto;
     white-space: pre-line;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .terminal-actions {

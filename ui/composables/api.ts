@@ -123,6 +123,10 @@ export const API = ref(new class {
     }
 
     public sendMessage = async (agentId: string, content: string) => {
+        if (content.length === 0) {
+            console.warn('cannot send a message with no content')
+            return
+        }
         const body: Partial<Message> = {
             agentId,
             request: content,

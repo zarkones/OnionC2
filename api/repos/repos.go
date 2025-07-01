@@ -1,5 +1,5 @@
 package repos
 
 const (
-	DEFAULT_LIMIT = 10
+	DEFAULT_LIMIT = 100
 )
