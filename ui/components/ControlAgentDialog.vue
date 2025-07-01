@@ -160,12 +160,9 @@ const terminalOutput = ref() as Ref<HTMLElement | HTMLElement>
 const terminalInput = ref() as Ref<HTMLElement | HTMLElement>
 
 const commands = {
-    READ_CLIPBOARD: {
-        cmd: '/read-clipboard',
-    },
-    SYSTEM_DETAILS: {
-        cmd: '/system-details',
-    },
+    READ_CLIPBOARD: () => `/read-clipboard`,
+    SYSTEM_DETAILS: () => `/system-details`,
+    RUN_NO_AWAIT: (command: string) => `/run|${command}`,
 } as const
 
 const toggleExecutionAwaiting = () => {
@@ -185,7 +182,7 @@ const systemDetailsCommand = async () => {
     loading.value = true
 
     try {
-        await API.value.sendMessage(props.agentId, commands.SYSTEM_DETAILS.cmd)
+        await API.value.sendMessage(props.agentId, commands.SYSTEM_DETAILS())
         await scrollToBottom()
     } catch(e) {
         console.error('failed to send message:', e)
@@ -201,7 +198,7 @@ const grabClipboardCommand = async () => {
     loading.value = true
 
     try {
-        await API.value.sendMessage(props.agentId, commands.READ_CLIPBOARD.cmd)
+        await API.value.sendMessage(props.agentId, commands.READ_CLIPBOARD())
         await scrollToBottom()
     } catch(e) {
         console.error('failed to send message:', e)
@@ -221,7 +218,12 @@ const sendCommand = async () => {
     loading.value = true
 
     try {
-        await API.value.sendMessage(props.agentId, command.value)
+        await API.value.sendMessage(
+            props.agentId, 
+            awaitExecution.value === true
+                ? command.value
+                : commands.RUN_NO_AWAIT(command.value)
+        )
         command.value = ''
         await scrollToBottom()
     } catch(e) {
