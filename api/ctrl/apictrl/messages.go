@@ -15,7 +15,8 @@ import (
 
 type GetMessagesRespCtx struct {
 	Messages []models.Message `json:"messages"`
-	Since    string           `json:"since"`
+	Before   string           `json:"before"`
+	After    string           `json:"after"`
 }
 
 // GetMessages returns messages exchanged with a specific agent.
@@ -28,7 +29,8 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 	agentID := r.PathValue("agentID")
 
 	q := r.URL.Query()
-	since, errSince := strconv.ParseInt(q.Get("since"), 10, 64)
+	before, errBefore := strconv.ParseInt(q.Get("before"), 10, 64)
+	after, errAfter := strconv.ParseInt(q.Get("after"), 10, 64)
 	page, _ := strconv.Atoi(q.Get("page"))
 	limit, err := strconv.Atoi(q.Get("limit"))
 	if err != nil {
@@ -38,10 +40,14 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 
 	var messages []models.Message
 
-	if errSince == nil {
-		messages, err = messagesRepo.GetMultipleSince(agentID, int64(since), limit)
+	if errAfter == nil {
+		messages, err = messagesRepo.GetMultipleAfter(agentID, after, limit)
 	} else {
-		messages, err = messagesRepo.GetMultiple(agentID, offset, limit)
+		if errBefore == nil {
+			messages, err = messagesRepo.GetMultipleBefore(agentID, before, limit)
+		} else {
+			messages, err = messagesRepo.GetMultiple(agentID, offset, limit)
+		}
 	}
 
 	if err != nil {
@@ -57,10 +63,51 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 
 	resp := GetMessagesRespCtx{
 		Messages: messages,
-		Since:    fmt.Sprint(messages[len(messages)-1].CreatedAt),
+		Before:   fmt.Sprint(messages[len(messages)-1].CreatedAt),
+		After:    fmt.Sprint(messages[0].CreatedAt),
 	}
 
 	if err := json.NewEncoder(w).Encode(&resp); err != nil {
+		log.Println("api: error: serializing response:", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+}
+
+type GetMessageUpdatesReqCtx []string
+type GetMessageUpdatesRespCtx map[string]models.Message
+
+func GetMessageByIDs(w http.ResponseWriter, r *http.Request) {
+	var messageIDs GetMessageUpdatesReqCtx
+
+	if err := json.NewDecoder(r.Body).Decode(&messageIDs); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if messageIDs == nil || len(messageIDs) == 0 {
+		http.Error(w, "no ids supplied", http.StatusUnprocessableEntity)
+		return
+	}
+
+	messages, err := messagesRepo.GetMultipleByIDs(messageIDs)
+	if err != nil {
+		log.Println("api: error: GetMessages:", err)
+		http.Error(w, "", http.StatusInternalServerError)
+		return
+	}
+
+	if len(messages) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	msgMap := make(GetMessageUpdatesRespCtx, len(messages))
+	for _, msg := range messages {
+		msgMap[msg.ID] = msg
+	}
+
+	if err := json.NewEncoder(w).Encode(&msgMap); err != nil {
 		log.Println("api: error: serializing response:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return

@@ -39,7 +39,7 @@ export const API = ref(new class {
     public store
     
     constructor() {
-        this.username = 'zarkones3'
+        this.username = ''
         this.c2HostURL = 'http://localhost:8080'
         this.privateKey = null
         this.store = ref({
@@ -57,7 +57,8 @@ export const API = ref(new class {
                 agentId: '',
                 lastSentAt: 0,
                 page: undefined as number | undefined,
-                since: undefined as string | undefined,
+                before: undefined as string | undefined,
+                after: undefined as string | undefined,
             },
         })
 
@@ -88,7 +89,8 @@ export const API = ref(new class {
             agentId: '',
             data: [],
             page: undefined,
-            since: undefined,
+            before: undefined,
+            after: undefined,
         }
     }
 
@@ -146,9 +148,35 @@ export const API = ref(new class {
         this.store.value.messages.lastSentAt = Date.now()
     }
 
-    public fetchMessages = async (agentId: string, options: { page: number | undefined, since: string | undefined }) => {
+    public fetchMessagesByIds = async (messageIds: string[]) => {
+        if (messageIds.length === 0) {
+            return {}
+        }
+
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+
+        const response = await fetch(`${this.c2HostURL}/v1/messages/by-ids`, {
+            method: 'POST',
+            headers: {
+                Authorization: token,
+            },
+            body: JSON.stringify(messageIds),
+        })
+
+        if (response.status === 204) {
+            return {}
+        }
+
+        return await response.json() as Record<string, Message>
+    }
+
+    public fetchMessages = async (agentId: string, options: { page: number | undefined, before: string | undefined, after: string | undefined }) => {
         if (agentId.length === 0) {
-            return { since: "", messages: [] }
+            return { before: '', after: '', messages: [] }
         }
         
         const tokenPayload: JWTPayload = {
@@ -159,7 +187,8 @@ export const API = ref(new class {
 
         const queryParams = [
             typeof options.page !== undefined ? `page=${options.page}` : '',
-            typeof options.since !== undefined ? `since=${options.since}` : '',
+            typeof options.before !== undefined ? `before=${options.before}` : '',
+            typeof options.after !== undefined ? `after=${options.after}` : '',
         ]
 
         const response = await fetch(`${this.c2HostURL}/v1/messages/${agentId}?${queryParams.join('&')}`, {
@@ -169,10 +198,10 @@ export const API = ref(new class {
         })
 
         if (response.status === 204) {
-            return { since: "", messages: [] }
+            return { before: '', after: '', messages: [] }
         }
 
-        const r = await response.json() as { since: string, messages: Message[] } 
+        const r = await response.json() as { before: string, after: string, messages: Message[] } 
         
         return { ...r, messages: r.messages.reverse() }
     }

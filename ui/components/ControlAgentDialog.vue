@@ -168,21 +168,60 @@ const sendCommand = async () => {
         loading.value = false
     }
 
-    // await fetchMessages()
+    const newMessages = await API.value.fetchMessages(props.agentId, { page: 0, before: undefined, after: API.value.store.messages.after })
+    if (newMessages.messages.length !== 0) {
+        API.value.store.messages.after = newMessages.after
+        API.value.store.messages.data = [ ...API.value.store.messages.data, ...newMessages.messages, ] as Message[]
+        await scrollToBottom()
+    }
 }
 
+const terminalOutputFullyScrolled = () => terminalOutput.value.scrollTop + terminalOutput.value.clientHeight >= terminalOutput.value.scrollHeight
+
 const selected = async () => {
-    console.log("YOOYOYOYOY")
-    // await fetchMessages()
     API.value.clearMessages()
     API.value.store.messages.newMessageCallback = async () => {
         await scrollToBottom()
     }
     API.value.store.messages.agentId = props.agentId
-    const messages = await API.value.fetchMessages(props.agentId, { page: 0, since: undefined })
+    const messages = await API.value.fetchMessages(props.agentId, { page: 0, before: undefined, after: undefined })
     API.value.store.messages.data = messages.messages
-    API.value.store.messages.since = messages.since
+    API.value.store.messages.before = messages.before
+    API.value.store.messages.after = messages.after
     await scrollToBottom()
+
+    setInterval(async () => {
+        if (!terminalOutput || !terminalOutput.value) {
+            return
+        }
+        const newMessages = await API.value.fetchMessages(props.agentId, { page: 0, before: undefined, after: API.value.store.messages.after })
+        if (newMessages.messages.length !== 0) {
+            API.value.store.messages.after = newMessages.after
+            API.value.store.messages.data = [ ...API.value.store.messages.data, ...newMessages.messages, ] as Message[]
+            if (terminalOutputFullyScrolled() === true) {
+                await scrollToBottom()
+            }
+        }
+
+        const messagesWithoutResponses = API.value.store.messages.data
+            .filter(msg => !msg.response.length)
+            .map(msg => msg.id)
+
+        const msgMap = await API.value.fetchMessagesByIds(messagesWithoutResponses)
+        API.value.store.messages.data.forEach(msg => {
+            if (!msg) {
+                return
+            }
+            if (msg.response.length !== 0) {
+                return
+            }
+            msg.response = msgMap[msg.id]?.response as string
+        })
+
+        if (terminalOutputFullyScrolled() === true) {
+            await scrollToBottom()
+        }
+    }, 3000)
 
     if (terminalOutput.value) {
         let cooloff = false
@@ -200,14 +239,12 @@ const selected = async () => {
             try {
                 cooloff = true
                 
-                const olderMessages = await API.value.fetchMessages(props.agentId, { page: undefined, since: API.value.store.messages.since })
+                const olderMessages = await API.value.fetchMessages(props.agentId, { page: undefined, before: API.value.store.messages.before, after: undefined })
                 if (olderMessages.messages.length !== 0) {
                     const before = element.scrollHeight
-                    console.log('before:', element.scrollTop, element.scrollHeight)
-                    API.value.store.messages.since = olderMessages.since
+                    API.value.store.messages.before = olderMessages.before
                     API.value.store.messages.data = [ ...olderMessages.messages, ...API.value.store.messages.data ] as Message[]
                     await nextTick()
-                    console.log('after:', element.scrollTop, element.scrollHeight)
                     terminalOutput.value.offsetHeight // Trigger reflow
                     terminalOutput.value.scrollTop = terminalOutput.value.scrollHeight - before
                 }

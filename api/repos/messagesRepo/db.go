@@ -18,13 +18,27 @@ func GetMultiple(agentID string, offset, limit int) (messages []models.Message, 
 		Find(&messages).Error
 }
 
-func GetMultipleSince(agentID string, since int64, limit int) (messages []models.Message, err error) {
+func GetMultipleBefore(agentID string, before int64, limit int) (messages []models.Message, err error) {
 	return messages, db.ORM.
 		Where("agent_id = ?", agentID).
-		Where("created_at < ?", since).
+		Where("created_at < ?", before).
 		Order("created_at DESC").
 		Limit(limit).
 		Find(&messages).Error
+}
+
+func GetMultipleAfter(agentID string, after int64, limit int) (messages []models.Message, err error) {
+	return messages, db.ORM.
+		Where("agent_id = ?", agentID).
+		Where("created_at > ?", after).
+		Order("created_at ASC").
+		Limit(limit).
+		Find(&messages).Error
+}
+
+func GetMultipleByIDs(messageIDs []string) (messages []models.Message, err error) {
+	return messages, db.ORM.
+		Find(&messages, messageIDs).Error
 }
 
 func GetMultipleForAgent(agentID string) (messages []models.Message, err error) {
