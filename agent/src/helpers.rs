@@ -1,5 +1,6 @@
 use crate::config;
 
+use reqwest::Client;
 use systemstat::{Platform, System};
 use tokio::io::{
     AsyncWriteExt,
@@ -19,6 +20,19 @@ use windows::Win32::System::DataExchange::{OpenClipboard, GetClipboardData, Clos
 use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
 use windows::Win32::Foundation::HGLOBAL;
 use std::ffi::CStr;
+
+#[inline]
+pub async fn get_real_ip_address() -> std::result::Result<String, Box<dyn Error>> {
+    let client = Client::new();
+
+    let res = client.get(config::get_real_ip_endpoint()).send().await?;
+
+    let text = res.text().await?;
+
+    let trimmed = text.trim();
+
+    Ok(trimmed.to_string())
+}
 
 #[inline]
 pub fn read_clipboard() -> std::result::Result<String, Box<dyn Error>> {

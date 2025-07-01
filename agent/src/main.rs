@@ -185,9 +185,19 @@ async fn main() {
 
         if id.len() == 0 {
             let system_information = helpers::get_system_information();
-            let ip_address = ""; // TODO
+            let mut ip_address = "unknown".to_string();
+            if config::send_real_ip_on_start() {
+                match helpers::get_real_ip_address().await {
+                    Ok(ip) => {
+                        ip_address = ip;
+                    },
+                    Err(e) => {
+                        debug_println!("failed to get reap ip: {}", e);
+                    },
+                }
+            }
 
-            let id_resp = match register(&hostname, os_name, sys_arch, &system_information.os_version, &system_information.cpu_names_only, ip_address, &system_information.memory, &mut stream).await {
+            let id_resp = match register(&hostname, os_name, sys_arch, &system_information.os_version, &system_information.cpu_names_only, &ip_address, &system_information.memory, &mut stream).await {
                 Ok(id_resp) => id_resp,
                 Err(e) => {
                     debug_eprintln!("registration error: {}", e);
@@ -348,6 +358,18 @@ async fn main() {
                         },
                         Err(e) => {
                             return format!("Error parsing the command: {}", e);
+                        }
+                    }
+                }
+
+                if message.request == "/get-ip" {
+                    match helpers::get_real_ip_address().await {
+                        Ok(ip) => {
+                            return ip;
+                        },
+                        Err(e) => {
+                            debug_println!("error getting the real ip: {}", e);
+                            return "unknown".to_string();
                         }
                     }
                 }

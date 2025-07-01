@@ -76,5 +76,17 @@ func InsertMessageResponse(w http.ResponseWriter, r *http.Request) {
 		log.Println("failed to update 'last seen' for agent:", agentID, err)
 	}
 
+	message, err := messagesRepo.Get(newMsg.MessageID)
+	if err == nil {
+		if message.Request == "/get-ip" {
+			agent, err := agentsRepo.Get(agentID)
+			if err == nil {
+				agentsRepo.UpdateIP(agent.ID, newMsg.Response)
+			} else {
+				// TODO: Log something...
+			}
+		}
+	}
+
 	w.WriteHeader(http.StatusOK)
 }

@@ -26,3 +26,12 @@ func UpdateLastSeen(agentID string) (err error) {
 	agent.LastSeen = time.Now().UnixNano()
 	return db.ORM.Save(agent).Error
 }
+
+func UpdateIP(agentID, ip string) (err error) {
+	agent, err := Get(agentID)
+	if err != nil {
+		return err
+	}
+	agent.IP = ip
+	return db.ORM.Save(agent).Error
+}

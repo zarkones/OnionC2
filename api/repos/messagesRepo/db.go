@@ -36,6 +36,10 @@ func GetMultipleAfter(agentID string, after int64, limit int) (messages []models
 		Find(&messages).Error
 }
 
+func Get(messageID string) (messages models.Message, err error) {
+	return messages, db.ORM.Where("id = ?", messageID).First(&messages).Error
+}
+
 func GetMultipleByIDs(messageIDs []string) (messages []models.Message, err error) {
 	return messages, db.ORM.
 		Find(&messages, messageIDs).Error
