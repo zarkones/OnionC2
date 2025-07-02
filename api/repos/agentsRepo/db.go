@@ -15,6 +15,14 @@ func GetMultiple() (agents []models.Agent, err error) {
 	return agents, db.ORM.Find(&agents).Error
 }
 
+func GetMultipleByCountryCode(ccs []string) (agents []models.Agent, err error) {
+	return agents, db.ORM.Where("country_code IN ?", ccs).Find(&agents).Error
+}
+
+func GetMultipleUnknownOrigins() (agents []models.Agent, err error) {
+	return agents, db.ORM.Where("ip = ? OR ip = ?", "", "unknown").Find(&agents).Error
+}
+
 func Insert(agent *models.Agent) (err error) {
 	return db.ORM.Create(&agent).Error
 }

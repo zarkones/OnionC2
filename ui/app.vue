@@ -28,7 +28,7 @@ body {
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 
     /* Optional: Rounded corners for a smoother look */
-    border-radius: 10px;
+    /* border-radius: 10px; */
 }
 
 /* Fallback for browsers that don’t support backdrop-filter */

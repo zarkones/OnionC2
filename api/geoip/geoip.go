@@ -2,15 +2,11 @@ package geoip
 
 import (
 	"encoding/binary"
-	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log"
 	"net"
-	"os"
 	"sort"
-	"strconv"
 
 	_ "embed"
 )
@@ -56,92 +52,8 @@ func (ne *NetworkEntry) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// networks holds the sorted list of network entries.
-var networks []NetworkEntry
-
-// readGeonames reads the geoname CSV and returns a map from geoname_id to Country.
-func readGeonames(filename string) (map[int]Country, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open geonames file: %v", err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	_, err = reader.Read() // Skip header
-	if err != nil {
-		return nil, fmt.Errorf("failed to read geonames header: %v", err)
-	}
-
-	geonames := make(map[int]Country)
-	for {
-		row, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to read geonames row: %v", err)
-		}
-		geonameID, err := strconv.Atoi(row[0])
-		if err != nil {
-			log.Printf("Skipping invalid geoname_id: %s", row[0])
-			continue
-		}
-		isoCode := row[4]
-		name := row[5]
-		geonames[geonameID] = Country{ISOCode: isoCode, Name: name}
-	}
-	return geonames, nil
-}
-
-// readNetworks reads the network CSV and returns a slice of NetworkEntry.
-func readNetworks(filename string, geonames map[int]Country) ([]NetworkEntry, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open networks file: %v", err)
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	_, err = reader.Read() // Skip header
-	if err != nil {
-		return nil, fmt.Errorf("failed to read networks header: %v", err)
-	}
-
-	var networks []NetworkEntry
-	for {
-		row, err := reader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("failed to read networks row: %v", err)
-		}
-		networkStr := row[0]
-		_, ipNet, err := net.ParseCIDR(networkStr)
-		if err != nil {
-			log.Printf("Skipping invalid CIDR: %s", networkStr)
-			continue
-		}
-		regCountryIDStr := row[2] // registered_country_geoname_id
-		if regCountryIDStr == "" {
-			log.Printf("Skipping network with empty registered_country_geoname_id: %s", networkStr)
-			continue
-		}
-		regCountryID, err := strconv.Atoi(regCountryIDStr)
-		if err != nil {
-			log.Printf("Skipping invalid registered_country_geoname_id: %s", regCountryIDStr)
-			continue
-		}
-		country, ok := geonames[regCountryID]
-		if !ok {
-			log.Printf("No country found for geoname_id %d in network %s", regCountryID, networkStr)
-			continue
-		}
-		networks = append(networks, NetworkEntry{Net: ipNet, Country: country})
-	}
-	return networks, nil
-}
+// Networks holds the sorted list of network entries.
+var Networks []NetworkEntry
 
 // ipToUint32 converts an IPv4 address to a uint32 for comparison.
 // Returns zero on error.
@@ -170,12 +82,12 @@ func IpToCountry(ipStr string) (string, string, error) {
 	ipUint := ipToUint32(ip)
 
 	// Binary search to find the first network where Net.IP > ip
-	i := sort.Search(len(networks), func(i int) bool {
-		return ipToUint32(networks[i].Net.IP) > ipUint
+	i := sort.Search(len(Networks), func(i int) bool {
+		return ipToUint32(Networks[i].Net.IP) > ipUint
 	})
 	// Check the previous network (if it exists)
-	if i > 0 && networks[i-1].Net.Contains(ip) {
-		country := networks[i-1].Country
+	if i > 0 && Networks[i-1].Net.Contains(ip) {
+		country := Networks[i-1].Country
 		return country.Name, country.ISOCode, nil
 	}
 	return "", "", fmt.Errorf("IP not found in any network")
@@ -185,11 +97,11 @@ func IpToCountry(ipStr string) (string, string, error) {
 var geoData []byte
 
 func Init() (err error) {
-	if err := json.Unmarshal(geoData, &networks); err != nil {
+	if err := json.Unmarshal(geoData, &Networks); err != nil {
 		return err
 	}
-	sort.Slice(networks, func(i, j int) bool {
-		return ipToUint32(networks[i].Net.IP) < ipToUint32(networks[j].Net.IP)
+	sort.Slice(Networks, func(i, j int) bool {
+		return ipToUint32(Networks[i].Net.IP) < ipToUint32(Networks[j].Net.IP)
 	})
 	return nil
 }
