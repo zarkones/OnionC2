@@ -2,6 +2,7 @@ package agentsRepo
 
 import (
 	"api/db"
+	"api/geoip"
 	"api/models"
 	"time"
 )
@@ -33,5 +34,12 @@ func UpdateIP(agentID, ip string) (err error) {
 		return err
 	}
 	agent.IP = ip
+	if len(ip) != 0 {
+		country, code, err := geoip.IpToCountry(ip)
+		if err == nil {
+			agent.Country = country
+			agent.CountryCode = code
+		}
+	}
 	return db.ORM.Save(agent).Error
 }

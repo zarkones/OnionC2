@@ -6,6 +6,7 @@ import (
 	"api/ctrl/apictrl"
 	"api/ctrl/c2ctrl"
 	"api/db"
+	"api/geoip"
 	"api/repos/operatorsRepo"
 	"fmt"
 	"log"
@@ -53,6 +54,12 @@ func main() {
 	// by agents.
 	os.MkdirAll(*config.UploadsDirectoryPath, 0777)
 	os.MkdirAll(*config.DownloadsDirectoryPath, 0777)
+
+	// Initialize geoip data.
+	if err := geoip.Init(); err != nil {
+		log.Println("failed to initialize geoip repository:", err)
+		os.Exit(1)
+	}
 
 	// "torrc" configuration file contains instructions for how Tor should
 	// behave. In our case we use it in order to define our onion service.

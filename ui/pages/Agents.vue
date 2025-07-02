@@ -55,6 +55,7 @@ const formatUnixNanoTime = (nanoStr: number) => {
 
 const headers = [
     // { title: 'ID', align: 'start', key: 'id' },
+    { title: 'Country', align: 'start', key: 'country' },
     { title: 'IP', align: 'start', key: 'ip' },
     { title: 'Hostname', align: 'start', key: 'hostname' },
     { title: 'OS', align: 'start', key: 'os' },
