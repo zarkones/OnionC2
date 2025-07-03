@@ -18,9 +18,9 @@ const router = useRouter()
 
 const gotoUnknownOriginAgents = () => {
     router.push({
-    path: '/agents',
-    query: { origins: 'unknown' }
-  })
+        path: '/agents',
+        query: { origins: 'unknown' }
+    })
 }
 
 </script>

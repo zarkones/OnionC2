@@ -58,7 +58,7 @@ const handleWheel = (event) => {
 
     // Calculate minimum zoom to ensure the map fills the container
     const minZoom = Math.max(containerWidth / mapWidth, containerHeight / mapHeight)
-    const maxZoom = 10 // Maximum zoom limit (adjust as needed)
+    const maxZoom = 200 // Maximum zoom limit (adjust as needed)
     const factor = event.deltaY < 0 ? 1.1 : 0.9 // Zoom in or out factor
     const newZoom = zoom.value * factor
 
@@ -120,17 +120,33 @@ const setView = (lat, lon, zoomLevel = 1) => {
     clampPan()
 }
 
+const router = useRouter()
+
+const gotoAgentsWithFilter = async (origins) => {
+    await router.push({
+        path: '/agents',
+        query: { origins }
+    })
+}
+
 // Set initial view to Europe on mount
-onMounted(() => {
+onMounted(async () => {
     setView(48, 0, 2.5) // Center on Europe (approx. 50°N, 10°E) with zoom 1
 
-    const srb = document.getElementById('RS')
-    srb.style.fill = '#E53935'
+    await API.value.generalUpdate()
+    await nextTick()
 
-    const ru = document.getElementById('NL')
-    ru.style.fill = '#C62828'
-
-    document.getElementById('RO').style.fill = '#EF5350'
+    API.value.store.stats.countryCodes.forEach(cc => {
+        const countries = document.querySelectorAll(`.cc-${cc}`)
+        if (!countries || !countries.length) return
+        countries.forEach(country => {
+            country.style.fill = '#E53935'
+            country.style.cursor = 'pointer'
+            country.addEventListener('click', async () => {
+                await gotoAgentsWithFilter(cc)
+            })
+        })
+    })
 })
 </script>
 

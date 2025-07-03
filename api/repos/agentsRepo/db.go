@@ -27,6 +27,13 @@ func GetMultipleUnknownOriginsCount() (count int64, err error) {
 	return count, db.ORM.Where("ip = ? OR ip = ?", "", "unknown").Model(&models.Agent{}).Count(&count).Error
 }
 
+func GetUniqueCountryCodes() (countryCodes []string, err error) {
+	return countryCodes, db.ORM.Model(&models.Agent{}).
+		Select("DISTINCT country_code").
+		Where("country_code != ? AND country_code != ?", "", "unknown").
+		Pluck("country_code", &countryCodes).Error
+}
+
 func Insert(agent *models.Agent) (err error) {
 	return db.ORM.Create(&agent).Error
 }

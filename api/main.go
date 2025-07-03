@@ -117,6 +117,7 @@ func startUserFacingService(apiHost *string) (err error) {
 	router := http.NewServeMux()
 
 	router.HandleFunc("GET /v1/stats/agents", apictrl.GetStatsAgents)
+	router.HandleFunc("GET /v1/stats/countries", apictrl.GetStatsCountries)
 
 	router.HandleFunc("GET /v1/geoip/origins", apictrl.GetOrigins())
 

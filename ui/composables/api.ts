@@ -66,6 +66,7 @@ export const API = ref(new class {
             },
             stats: {
                 unknownOriginCount: 0,
+                countryCodes: [] as string[],
             },
             messages: {
                 newMessageCallback: () => {},
@@ -95,6 +96,8 @@ export const API = ref(new class {
 
         const statsAgents = await this.fetchStatsAgents()
         this.store.value.stats.unknownOriginCount = statsAgents.unknownOriginCount
+
+        this.store.value.stats.countryCodes = await this.fetchStatsCountries()
     }
 
     private initializePeriodicDataFetching = async () => {
@@ -307,5 +310,24 @@ export const API = ref(new class {
         })
 
         return await response.json() as StatsAgents
+    }
+
+    private fetchStatsCountries = async () => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/stats/countries`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as string[]
     }
 }())
