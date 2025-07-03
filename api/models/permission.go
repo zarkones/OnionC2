@@ -33,6 +33,7 @@ const (
 	// Permissions management permissions.
 	PERMISSION_INSERT
 	PERMISSION_DELETE
+	PERMISSION_LIST
 )
 
 type Permission struct {

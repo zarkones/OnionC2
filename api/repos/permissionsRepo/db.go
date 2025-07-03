@@ -27,3 +27,7 @@ func GetMultiple() (permissions []models.Permission, err error) {
 func Insert(permission *models.Permission) (err error) {
 	return db.ORM.Create(&permission).Error
 }
+
+func Delete(permissionID string) (err error) {
+	return db.ORM.Where("id = ?", permissionID).Delete(models.Permission{}).Error
+}

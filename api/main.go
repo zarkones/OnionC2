@@ -123,6 +123,10 @@ func startUserFacingService(apiHost *string) (err error) {
 
 	router.HandleFunc("GET /v1/agents", apictrl.GetAgents)
 
+	router.HandleFunc("GET /v1/permissions/{operatorUsername}", apictrl.GetPermissions)
+	router.HandleFunc("PUT /v1/permissions", apictrl.InsertPermission)
+	router.HandleFunc("DELETE /v1/permissions/{permissionID}", apictrl.DeletePermission)
+
 	router.HandleFunc("GET /v1/operators", apictrl.GetOperators)
 
 	router.HandleFunc("POST /v1/messages/by-ids", apictrl.GetMessageByIDs)

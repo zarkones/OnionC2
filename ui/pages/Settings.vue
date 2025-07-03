@@ -49,6 +49,66 @@
                             />
                         </v-tabs-window-item>
 
+                        <v-tabs-window-item class="settings-tab-container" :value="tabs.Operators.key">
+                            <v-select
+                                v-model="selectedOperatorUsername"
+                                :items="API.store.operators.data"
+                                item-title="username"
+                                item-value="username"
+                                label="Select Operator"
+                                density="compact"
+                                variant="outlined"
+                                v-on:update:model-value="switchOperator"
+                            >
+                            </v-select>
+
+                            <div v-if="selectedOperator && Object.keys(selectedOperator as any).length > 0">
+                                <v-expansion-panels variant="accordion">
+                                    <v-expansion-panel
+                                        title="Show Public Key"
+                                        :text="selectedOperator?.publicKeyHex"
+                                    />
+                            </v-expansion-panels>
+
+                                <v-row class="mt-2">
+                                    <v-col cols="2"><h4>Created At:</h4></v-col>
+                                    <v-col>{{ formatUnixNanoTime(selectedOperator?.createdAt as bigint) }}</v-col>
+                                </v-row>
+
+                                <!-- {{ permissions }} -->
+
+                                <!-- <v-row class="mt-4"
+                                    v-for="p in permissions"
+                                    :key="p.id"
+                                >
+                                    <v-col cols="2">{{ PERMISSIONS[p.key] }}</v-col>
+                                </v-row> -->
+                                <v-data-table-virtual
+                                    :headers="(headers as any)"
+                                    :items="permissions"
+                                    density="compact"
+                                    item-key="id"
+                                    class="table-el liquid-glass mt-4"
+                                    fixed-header
+                                >
+                                    <template v-slot:item.key="{ item }">
+                                        {{ PERMISSIONS[item.key] }}
+                                    </template>
+                                    
+                                    <template v-slot:item.createdAt="{ item }">
+                                        {{ formatUnixNanoTime(item.createdAt) }}
+                                    </template>
+
+                                    <template v-slot:item.actions="{ item }">
+                                        <v-btn density="compact" variant="plain">
+                                            <!-- // TODO: -->
+                                            <v-icon icon="mdi-delete"></v-icon>
+                                        </v-btn>
+                                    </template>
+                                </v-data-table-virtual>
+                            </div>
+                        </v-tabs-window-item>
+
                     </v-tabs-window>
                 </v-col>
             </v-row>
@@ -59,12 +119,33 @@
 
 <script setup lang="ts">
 const tabs = {
-    Authentication: { key: 'Authentication', icon: 'mdi-account' },
+    Authentication: { key: 'Authentication', icon: 'mdi-cog' },
+    Operators: { key: 'Operators', icon: 'mdi-account-group' },
 } as const
 
 const tab = ref('')
 const privateKeyHexPem = ref('')
 const keyParsingErrored = ref(false)
+const selectedOperatorUsername = ref('')
+const selectedOperator: Ref<Operator | null> = ref(null)
+const permissions = ref([] as Permission[])
+
+const headers = [
+    { title: 'Key', align: 'start', key: 'key' },
+    { title: 'Created At', align: 'start', key: 'createdAt' },
+    { title: 'Actions', align: 'end', key: 'actions' },
+]
+
+const switchOperator = async () => {
+    try {
+    selectedOperator.value = API.value.store.operators.data.filter(o => o.username === selectedOperatorUsername.value)[0] as Operator
+    } catch(e) {
+        console.error('could not find stored operator with username of:', selectedOperatorUsername.value)
+        return
+    }
+
+    permissions.value = await API.value.fetchPermissions(selectedOperator.value.username)
+}
 
 const updatePrivateKey = async () => {
     try {

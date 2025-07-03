@@ -20,7 +20,7 @@ export type Agent = {
 export type Operator = {
     username: string
     publicKeyHex: string
-    createdAt: number
+    createdAt: bigint
 }
 
 export type Message = {
@@ -28,7 +28,7 @@ export type Message = {
     agentId: string
     request: string
     response: string
-    createdAt: number
+    createdAt: bigint
 }
 
 export type Country = {
@@ -38,6 +38,34 @@ export type Country = {
 
 export type StatsAgents = {
     unknownOriginCount: number
+}
+
+export type Permission = {
+    id: string        
+    key: number 
+    username: string        
+    metadata: string        
+    createdAt: bigint         
+}
+
+export enum PERMISSIONS {
+    PERMISSION_NOT_SPECIFIED,
+	PERMISSION_AGENTS_LIST,
+	PERMISSION_AGENTS_STATS,
+	PERMISSION_AGENTS_LIST_MESSAGES,
+	PERMISSION_AGENTS_INSERT_MESSAGE,
+	PERMISSION_CHAT_LIST_CHANNELS,
+	PERMISSION_CHAT_LIST_CHANNEL_MESSAGES,
+	PERMISSION_CHAT_INSERT_CHANNEL,
+	PERMISSION_CHAT_INSERT_CHANNEL_MESSAGE,
+	PERMISSION_CHAT_DELETE_CHANNEL,
+	PERMISSION_CHAT_DELETE_CHANNEL_MESSAGE,
+	PERMISSION_OPERATORS_LIST,
+	PERMISSION_OPERATORS_INSERT,
+	PERMISSION_OPERATORS_DELETE,
+	PERMISSION_INSERT,
+	PERMISSION_DELETE,
+	PERMISSION_LIST,
 }
 
 export const API = ref(new class {
@@ -330,4 +358,52 @@ export const API = ref(new class {
 
         return await response.json() as string[]
     }
+
+    public fetchPermissions = async (operatorUsername: string) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/permissions/${operatorUsername}`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as Permission[]
+    }
 }())
+
+export const formatUnixNanoTime = (nanoStr: string | bigint | number) => {
+    const nano = BigInt(nanoStr);
+    const milli = Number(nano / 1000000n);
+    const date = new Date(milli);
+    const now = new Date();
+    // @ts-ignore
+    const diff = now - date;  // difference in milliseconds
+    const diffSeconds = Math.floor(diff / 1000);
+
+    if (diffSeconds < 60) {
+        return `${diffSeconds}s ago`;
+    } else if (diffSeconds < 3600) {
+        const minutes = Math.floor(diffSeconds / 60);
+        return `${minutes}min ago`;
+    } else if (diffSeconds < 86400) {
+        const hours = Math.floor(diffSeconds / 3600);
+        const minutes = Math.floor((diffSeconds % 3600) / 60);
+        return `${hours}h ${minutes}min ago`;
+    } else {
+        const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const day = date.getDate();
+        const month = months[date.getMonth()];
+        const year = date.getFullYear();
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        return `${day} ${month} ${year} / ${hours}:${minutes}`;
+    }
+}
