@@ -1,23 +1,26 @@
 <template>
     <v-btn @click="gotoUnknownOriginAgents" variant="plain" density="compact">
         <v-icon icon="mdi-crosshairs-question" class="mr-1" />
-        {{ mockedAgentAmount }}
+        {{ API.store.stats.unknownOriginCount }}
         <v-tooltip activator="parent" location="top" class="unknown-origin-tooltip" open-delay="600">
             <h4>Unknown Origin</h4>
-            There {{ mockedAgentAmount === 1 ? 'is' : 'are' }} {{ mockedAgentAmount }}
-            {{ mockedAgentAmount === 1 ? 'agent who\'s' : 'agents whose' }} IP {{ mockedAgentAmount === 1 ? 'address is' : 'addresses are' }} not yet known.
-            {{ mockedAgentAmount === 1 ? 'This agent' : 'These agents' }} won't be shown in the map. 
-            Clicking on this button would reveal which {{ mockedAgentAmount === 1 ? 'agent is' : 'agents are' }} in question.
+            There {{ API.store.stats.unknownOriginCount === 1 ? 'is' : 'are' }} {{ API.store.stats.unknownOriginCount }}
+            {{ API.store.stats.unknownOriginCount === 1 ? 'agent who\'s' : 'agents whose' }} IP {{ API.store.stats.unknownOriginCount === 1 ? 'address is' : 'addresses are' }} not yet known.
+            {{ API.store.stats.unknownOriginCount === 1 ? 'This agent' : 'These agents' }} won't be shown in the map. 
+            Clicking on this button would reveal which {{ API.store.stats.unknownOriginCount === 1 ? 'agent is' : 'agents are' }} in question.
         </v-tooltip>
     </v-btn>
 </template>
 
 <script setup lang="ts">
 
-const mockedAgentAmount = ref(164)
+const router = useRouter()
 
 const gotoUnknownOriginAgents = () => {
-    // TODO: Redirect to the agents page with unknown origin filter applied.
+    router.push({
+    path: '/agents',
+    query: { origins: 'unknown' }
+  })
 }
 
 </script>

@@ -36,6 +36,10 @@ export type Country = {
     n: string // Country Name
 }
 
+export type StatsAgents = {
+    unknownOriginCount: number
+}
+
 export const API = ref(new class {
     public username: string
     public c2HostURL: string
@@ -59,6 +63,9 @@ export const API = ref(new class {
             origins: {
                 data: [] as Country[],
                 selected: [] as string[], // ISO Country Codes.
+            },
+            stats: {
+                unknownOriginCount: 0,
             },
             messages: {
                 newMessageCallback: () => {},
@@ -85,6 +92,9 @@ export const API = ref(new class {
         if (this.store.value.origins.data.length === 0) {
             this.store.value.origins.data = await this.fetchOrigins()
         }
+
+        const statsAgents = await this.fetchStatsAgents()
+        this.store.value.stats.unknownOriginCount = statsAgents.unknownOriginCount
     }
 
     private initializePeriodicDataFetching = async () => {
@@ -282,5 +292,20 @@ export const API = ref(new class {
         }
 
         return await response.json() as Country[]
+    }
+
+    private fetchStatsAgents = async () => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/stats/agents`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        return await response.json() as StatsAgents
     }
 }())

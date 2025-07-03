@@ -116,6 +116,8 @@ func writeTorrcConfig(apiSockPath, onionServiceDirPath *string) (err error) {
 func startUserFacingService(apiHost *string) (err error) {
 	router := http.NewServeMux()
 
+	router.HandleFunc("GET /v1/stats/agents", apictrl.GetStatsAgents)
+
 	router.HandleFunc("GET /v1/geoip/origins", apictrl.GetOrigins())
 
 	router.HandleFunc("GET /v1/agents", apictrl.GetAgents)

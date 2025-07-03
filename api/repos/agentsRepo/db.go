@@ -23,6 +23,10 @@ func GetMultipleUnknownOrigins() (agents []models.Agent, err error) {
 	return agents, db.ORM.Where("ip = ? OR ip = ?", "", "unknown").Find(&agents).Error
 }
 
+func GetMultipleUnknownOriginsCount() (count int64, err error) {
+	return count, db.ORM.Where("ip = ? OR ip = ?", "", "unknown").Model(&models.Agent{}).Count(&count).Error
+}
+
 func Insert(agent *models.Agent) (err error) {
 	return db.ORM.Create(&agent).Error
 }

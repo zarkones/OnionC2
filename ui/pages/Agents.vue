@@ -50,6 +50,8 @@
 
 <script setup lang="ts">
 
+const route = useRoute()
+
 const formatUnixNanoTime = (nanoStr: number) => {
     const nano = BigInt(nanoStr);
     const milli = Number(nano / 1000000n);
@@ -95,6 +97,16 @@ const headers = [
 const originFilter = async () => {
     await API.value.generalUpdate()
 }
+
+onMounted(async () => {
+    try {
+        const origins = (route.query['origins'] as string).split(',')
+        if (origins.length > 0) {
+            API.value.store.origins.selected = origins
+        }
+        await API.value.generalUpdate()
+    } catch(e) {}
+})
 
 </script>
 

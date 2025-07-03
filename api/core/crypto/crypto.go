@@ -57,6 +57,7 @@ func CreateAdminOperator(username string) (operator models.Operator, recoveryWor
 
 	allowedPermissions := []models.PermissionKey{
 		models.PERMISSION_AGENTS_LIST,
+		models.PERMISSION_AGENTS_STATS,
 		models.PERMISSION_AGENTS_LIST_MESSAGES,
 		models.PERMISSION_AGENTS_INSERT_MESSAGE,
 		models.PERMISSION_CHAT_LIST_CHANNELS,
