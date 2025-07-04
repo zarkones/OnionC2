@@ -58,6 +58,7 @@ const headers = [
     { title: 'IP', align: 'start', key: 'ip' },
     { title: 'Hostname', align: 'start', key: 'hostname' },
     { title: 'OS', align: 'start', key: 'os' },
+    { title: 'OS Version', align: 'start', key: 'osVersion' },
     { title: 'CPU Name', align: 'start', key: 'cpuName' },
     { title: 'CPU Arch', align: 'start', key: 'arch' },
     { title: 'RAM', align: 'start', key: 'ram' },

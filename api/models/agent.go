@@ -24,7 +24,7 @@ type Agent struct {
 func (agent *Agent) BeforeCreate(tx *gorm.DB) (err error) {
 	agent.ID = uuid.New().String()
 	if len(agent.IP) != 0 {
-		country, code, err := geoip.IpToCountry(agent.ID)
+		country, code, err := geoip.IpToCountry(agent.IP)
 		if err == nil {
 			agent.Country = country
 			agent.CountryCode = code

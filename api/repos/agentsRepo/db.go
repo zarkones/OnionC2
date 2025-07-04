@@ -20,11 +20,11 @@ func GetMultipleByCountryCode(ccs []string) (agents []models.Agent, err error) {
 }
 
 func GetMultipleUnknownOrigins() (agents []models.Agent, err error) {
-	return agents, db.ORM.Where("ip = ? OR ip = ?", "", "unknown").Find(&agents).Error
+	return agents, db.ORM.Where("country = ? OR country = ?", "", "unknown").Find(&agents).Error
 }
 
 func GetMultipleUnknownOriginsCount() (count int64, err error) {
-	return count, db.ORM.Where("ip = ? OR ip = ?", "", "unknown").Model(&models.Agent{}).Count(&count).Error
+	return count, db.ORM.Where("country = ? OR country = ?", "", "unknown").Model(&models.Agent{}).Count(&count).Error
 }
 
 func GetUniqueCountryCodes() (countryCodes []string, err error) {
