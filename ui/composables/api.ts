@@ -68,6 +68,12 @@ export enum PERMISSIONS {
 	PERMISSION_LIST,
 }
 
+export type FileRecord = {
+    name: string
+    isDir: boolean
+    timestamp: unknown
+}
+
 export const API = ref(new class {
     public username: string
     public c2HostURL: string

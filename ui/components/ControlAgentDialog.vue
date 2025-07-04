@@ -43,22 +43,11 @@
                         </v-tooltip>
                     </v-btn>
 
-                    <v-btn
-                        variant="plain"
-                        density="compact"
-                    >
-                        <v-icon icon="mdi-folder-arrow-up-down" />
+                    <FileExplorerAgentDialog
+                    
+                    />
 
-                        <v-tooltip activator="parent" location="top" open-delay="600">
-                            <div class="tooltip-el">
-                                <h4>File Management</h4>
-                                Browse files of the remote system with an ability to upload
-                                and download files.
-                            </div>
-                        </v-tooltip>
-                    </v-btn>
-
-                    <v-btn
+                    <!-- <v-btn
                         variant="plain"
                         density="compact"
                     >
@@ -70,7 +59,7 @@
                                 Takes screenshot of the agent's computer.
                             </div>
                         </v-tooltip>
-                    </v-btn>
+                    </v-btn> -->
 
                     <v-btn
                         @click="grabClipboardCommand"
