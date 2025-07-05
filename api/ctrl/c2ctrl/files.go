@@ -2,6 +2,7 @@ package c2ctrl
 
 import (
 	"api/config"
+	"api/core"
 	"api/models"
 	"api/repos/agentsRepo"
 	"api/repos/filesRepo"
@@ -10,7 +11,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 )
 
 // DownloadFile serves files to agents who were ordered to download them.
@@ -96,7 +96,7 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originalFileName := getFileName(file.OriginalPath)
+	originalFileName := core.GetFileName(file.OriginalPath)
 	if len(originalFileName) == 0 {
 		log.Println("c2: error: UploadFile.filepath.Base: file name seems empty")
 		http.Error(w, "", http.StatusInternalServerError)
@@ -116,19 +116,4 @@ func UploadFile(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
-}
-
-// getFileName returns file's name from a path.
-func getFileName(path string) string {
-	// Replace all backslashes with forward slashes.
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	// Clean the path to handle relative components.
-	cleanPath := filepath.Clean(normalizedPath)
-	// Extract the base name.
-	fileName := filepath.Base(cleanPath)
-	// If the path still contains a drive letter (e.g., "C:"), take the last segment after the last "/".
-	if idx := strings.Index(fileName, ":"); idx != -1 {
-		fileName = filepath.Base(strings.TrimPrefix(cleanPath, fileName[:idx+1]))
-	}
-	return fileName
 }

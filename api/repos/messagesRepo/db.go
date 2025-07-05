@@ -9,6 +9,23 @@ import (
 
 var ErrMsgRespPopulated = errors.New("message's response is already populated")
 
+func GetLatestFS(agentID string) (messages models.Message, err error) {
+	return messages, db.ORM.
+		Where("agent_id = ?", agentID).
+		Where("request = ? OR request LIKE ?", "/ls", "/ls|%").
+		Where("response != ?", "").
+		Order("created_at DESC").
+		First(&messages).Error
+}
+
+func GetLatestRequestedFS(agentID string) (messages models.Message, err error) {
+	return messages, db.ORM.
+		Where("agent_id = ?", agentID).
+		Where("request = ? OR request LIKE ?", "/ls", "/ls|%").
+		Order("created_at DESC").
+		First(&messages).Error
+}
+
 func GetMultiple(agentID string, offset, limit int) (messages []models.Message, err error) {
 	return messages, db.ORM.
 		Where("agent_id = ?", agentID).

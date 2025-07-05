@@ -44,7 +44,7 @@
                     </v-btn>
 
                     <FileExplorerAgentDialog
-                    
+                        :agentId="props.agentId"
                     />
 
                     <!-- <v-btn

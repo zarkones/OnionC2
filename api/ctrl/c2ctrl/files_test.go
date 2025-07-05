@@ -1,6 +1,7 @@
 package c2ctrl
 
 import (
+	"api/core"
 	"testing"
 )
 
@@ -12,7 +13,7 @@ func TestFileNameGrabbing(t *testing.T) {
 	}
 
 	for _, path := range paths {
-		if getFileName(path) != "xyz.id" {
+		if core.GetFileName(path) != "xyz.id" {
 			t.FailNow()
 		}
 	}

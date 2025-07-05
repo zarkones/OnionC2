@@ -25,7 +25,7 @@
 
         <v-card variant="outlined" class="liquid-glass" density="compact">
             <v-toolbar density="compact" class="liquid-glass" title="File Explorer">
-                <p>{{ mockedCurrentDirPath }}</p>
+                <p>{{ API.store.fileRepo.remote.currentDir }}</p>
                 
                 <v-toolbar-items>
                 </v-toolbar-items>
@@ -39,80 +39,90 @@
             </v-toolbar>
 
             <div class="pl-4 pr-4">
-                <v-row style="min-height: 480px;">
+                <v-row style="min-height: 480px; max-height: 480px;">
                     <v-col cols="6">
-                        <div style="height: 50%;">
-                            <div class="d-flex">
-                                <h4>Server's Download Repository:</h4>
-                                <v-spacer />
-                                <v-btn
-                                    class="ml-4"
-                                    variant="plain"
-                                    density="compact"
-                                >
-                                    <v-icon size="26" icon="mdi-file-upload" />
 
-                                    <v-tooltip activator="parent" location="top" open-delay="600">
-                                        <div class="tooltip-el">
-                                            <h4>Upload File To Server</h4>
-                                            Upload a file to the command and control server. Once a file
-                                            is uploaded then you can order an agent to download it.
-                                        </div>
-                                    </v-tooltip>
-                                </v-btn>
-                            </div>
-
-                            <div
-                                v-for="(record, recordIndex) in mockedDirContent"
+                        <div class="d-flex">
+                            <h4>Server's Download Repository:</h4>
+                            <v-spacer />
+                            <v-btn
+                                class="ml-4"
+                                variant="plain"
+                                density="compact"
                             >
-                                <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2"></v-icon>
-                                <span>{{ record.name }}</span>
-                                <span>{{ record.timestamp }}</span>
-                                <v-btn
-                                    variant="plain"
-                                    density="compact"
-                                    @click="agentToServerUpload(record)"
-                                    style="float: right;"
-                                >
-                                    <v-icon icon="mdi-arrow-right-bold"></v-icon>
+                                <v-icon size="26" icon="mdi-file-upload" />
 
-                                    <v-tooltip activator="parent" location="top" open-delay="600">
-                                        <div class="tooltip-el">
-                                            <h4>Upload File To Remote System</h4>
-                                            Upload a file to the command and control server. Once a file
-                                            is uploaded then you can order an agent to download it.
-                                        </div>
-                                    </v-tooltip>
-                                </v-btn>
-                                <v-divider v-if="recordIndex !== mockedDirContent.length-1" />
+                                <v-tooltip activator="parent" location="top" open-delay="600">
+                                    <div class="tooltip-el">
+                                        <h4>Upload File To Server</h4>
+                                        Upload a file to the command and control server. Once a file
+                                        is uploaded then you can order an agent to download it.
+                                    </div>
+                                </v-tooltip>
+                            </v-btn>
+                        </div>
+
+                        <div style="max-height: 200px; overflow-y: auto;" class="mb-1">
+                            <div
+                                v-for="(record, recordIndex) in API.store.fileRepo.downloads"
+                            >
+                                <div class="d-flex">
+                                    <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2 ml-5"></v-icon>
+                                    <span>{{ record.name }}</span>
+                                    <v-spacer />
+                                    <span class="file-timestamp">{{ formatUnixNanoTime(record.timestamp) }}</span>
+                                    <v-btn
+                                        variant="plain"
+                                        density="compact"
+                                        @click="uploadFileToRemoteAgentFS(record)"
+                                        style="float: right;"
+                                        :disabled="API.store.fileRepo.loadingDownloads || API.store.fileRepo.loadingRemote"
+                                    >
+                                        <v-icon icon="mdi-arrow-right-bold"></v-icon>
+
+                                        <v-tooltip activator="parent" location="top" open-delay="600">
+                                            <div class="tooltip-el">
+                                                <h4>Upload File '{{ record.name }}' To Remote System</h4>
+                                                Upload a file to the command and control server. Once a file
+                                                is uploaded then you can order an agent to download it.
+                                            </div>
+                                        </v-tooltip>
+                                    </v-btn>
+                                </div>
+
+                                <v-divider v-if="recordIndex !== API.store.fileRepo.downloads.length-1" />
                             </div>
                         </div>
 
                         <h4>Files Uploaded By Agent:</h4>
-                        <div style="height: 50%;">
+                        <div style="overflow-y: auto; max-height: 200px;">
                             <div
-                            v-for="(record, recordIndex) in mockedDirContent"
-                        >
-                            <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2"></v-icon>
-                                <span>{{ record.name }}</span>
-                                <span>{{ record.timestamp }}</span>
-                                <v-btn
-                                    variant="plain"
-                                    density="compact"
-                                    @click="agentToServerUpload(record)"
-                                    style="float: right;"
-                                >
-                                    <v-icon icon="mdi-download"></v-icon>
+                                v-for="(record, recordIndex) in API.store.fileRepo.uploads"
+                            >
+                                <div class="d-flex">
+                                    <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2 ml-5"></v-icon>
+                                    <span>{{ record.name }}</span>
+                                    <v-spacer />
+                                    <span class="file-timestamp">{{ formatUnixNanoTime(record.timestamp) }}</span>
+                                    <v-btn
+                                        variant="plain"
+                                        density="compact"
+                                        @click="downloadFile(record)"
+                                        style="float: right;"
+                                        :disabled="API.store.fileRepo.loadingUploads"
+                                    >
+                                        <v-icon icon="mdi-download"></v-icon>
 
-                                    <v-tooltip activator="parent" location="top" open-delay="600">
-                                        <div class="tooltip-el">
-                                            <h4>Download File</h4>
-                                            Download a file from the C2 server to your machine through the browser.
-                                            This file was previously uploaded by the agent onto the C2 server.
-                                        </div>
-                                    </v-tooltip>
-                                </v-btn>
-                                <v-divider v-if="recordIndex !== mockedDirContent.length-1" />
+                                        <v-tooltip activator="parent" location="top" open-delay="600">
+                                            <div class="tooltip-el">
+                                                <h4>Download File '{{ record.name }}'</h4>
+                                                Download a file from the C2 server to your machine through the browser.
+                                                This file was previously uploaded by the agent onto the C2 server.
+                                            </div>
+                                        </v-tooltip>
+                                    </v-btn>
+                                </div>
+                                <v-divider v-if="recordIndex !== API.store.fileRepo.uploads.length-1" />
                             </div>
                         </div>
                     </v-col>
@@ -122,9 +132,9 @@
                             <h4>Remote File System:</h4>
                             <v-spacer />
                             <v-btn
-                                class="ml-4"
                                 variant="plain"
                                 density="compact"
+                                :disabled="API.store.fileRepo.loadingRemote"
                             >
                                 <v-icon size="26" icon="mdi-folder-plus" />
 
@@ -137,30 +147,52 @@
                             </v-btn>
                         </div>
 
-                        <div
-                            v-for="(record, recordIndex) in mockedDirContent"
-                        >
-                            <v-btn
-                                variant="plain"
-                                density="compact"
-                                @click="agentToServerUpload(record)"
+                        <div style="max-height: 430px; overflow-y: auto;">
+                            <div
+                                v-for="(record, recordIndex) in API.store.fileRepo.remote.content"
                             >
-                                <v-icon icon="mdi-arrow-left-bold"></v-icon>
+                                <div class="d-flex">
+                                    <v-btn
+                                        variant="plain"
+                                        density="compact"
+                                        @click="downloadFile(record)"
+                                        :disabled="API.store.fileRepo.loadingRemote"
+                                    >
+                                        <v-icon icon="mdi-arrow-left-bold"></v-icon>
 
-                                <v-tooltip activator="parent" location="top" open-delay="600">
-                                    <div class="tooltip-el">
-                                        <h4>Upload File To Server</h4>
-                                        Upload a file from agent's system onto the C2 server.
-                                        After it's uploaded to the C2 server, then you can download
-                                        it from your browser.
+                                        <v-tooltip activator="parent" location="top" open-delay="600">
+                                            <div class="tooltip-el">
+                                                <h4>Upload File '{{ record.name }}' To Server</h4>
+                                                Upload a file from agent's system onto the C2 server.
+                                                After it's uploaded to the C2 server, then you can download
+                                                it from your browser.
+                                            </div>
+                                        </v-tooltip>
+                                    </v-btn>
+
+                                    <v-btn
+                                        v-if="record.isDir === true"
+                                        @click="changeDir(record.name)"
+                                        class="fs-directory"
+                                        :disabled="API.store.fileRepo.loadingRemote"
+                                        density="compact"
+                                        variant="text"
+                                    >
+                                        <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2"></v-icon>
+                                        <span>{{ record.name }}</span>
+                                    </v-btn>
+                                    <div
+                                        v-else
+                                    >
+                                        <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2 ml-3"></v-icon>
+                                        <span>{{ record.name }}</span>
                                     </div>
-                                </v-tooltip>
-                            </v-btn>
-                            <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2"></v-icon>
-                            <span>{{ record.name }}</span>
-                            <v-spacer />
-                            <span>{{ record.timestamp }}</span>
-                            <v-divider v-if="recordIndex !== mockedDirContent.length-1" />
+
+                                    <v-spacer />
+                                    <span class="file-timestamp">{{ formatUnixNanoTime(record.timestamp) }}</span>
+                                </div>
+                                <v-divider v-if="recordIndex !== API.store.fileRepo.remote.content.length-1" />
+                            </div>
                         </div>
                     </v-col>
                 </v-row>
@@ -193,22 +225,27 @@
 
 const dialog = ref(false)
 
-const mockedCurrentDirPath = 'C:\\Users\\user\\Desktop'
-
-const mockedDirContent = [
-    { timestamp: '3h 13min ago', name: 'documents', isDir: true },
-    { timestamp: '3h 13min ago', name: 'pics_yr2016', isDir: true },
-    { timestamp: '3h 13min ago', name: 'Minecraft.exe', isDir: false },
-    { timestamp: '3h 13min ago', name: 'PhotoShop.exe', isDir: false },
-    { timestamp: '3h 13min ago', name: 'profilepic.png', isDir: false },
-    { timestamp: '3h 13min ago', name: 'veryimportant.csv', isDir: false },
-]
+const props = defineProps<{
+    agentId: string
+}>()
 
 const selected = async () => {
+    API.value.store.fileRepo.loadingRemote = true
+    try {
+        API.value.store.fileRepo.agentId = props.agentId
+        await API.value.sendMessage(props.agentId, `/ls`)
+        await API.value.generalUpdate()
+    } catch(e) {
+        console.error(e)
+    } finally {
+    }
+}
+
+const uploadFileToRemoteAgentFS = async (record: FileRecord) => {
 
 }
 
-const agentToServerUpload = async (record: FileRecord) => {
+const downloadFile = async (record: FileRecord) => {
 
 }
 
@@ -216,4 +253,27 @@ const apply = async () => {
 
 }
 
+const changeDir = async (dirName: string) => {
+    API.value.store.fileRepo.loadingRemote = true
+    try {
+        const cmd = `/ls|${API.value.store.fileRepo.remote.currentDir}\\${dirName}` // TODO: Accommodate linux case maybe?
+        await API.value.sendMessage(props.agentId, cmd)
+    } catch(e) {
+        console.error(e)
+    } finally {
+    }
+}
+
 </script>
+
+<style scoped>
+
+.file-timestamp {
+    color: #616161;
+}
+
+.fs-directory {
+    cursor: pointer;
+}
+
+</style>

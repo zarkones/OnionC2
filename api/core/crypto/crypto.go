@@ -72,6 +72,10 @@ func CreateAdminOperator(username string) (operator models.Operator, recoveryWor
 		models.PERMISSION_INSERT,
 		models.PERMISSION_DELETE,
 		models.PERMISSION_LIST,
+		models.PERMISSION_FILES_UPLOADS_REPO_LIST,
+		models.PERMISSION_FILES_REMOTE_REPO_LIST,
+		models.PERMISSION_FILES_DOWNLOADS_REPO_LIST,
+		models.PERMISSION_FILES_UPLOAD_TO_DOWNLOADS_REPO,
 	}
 
 	for _, key := range allowedPermissions {
