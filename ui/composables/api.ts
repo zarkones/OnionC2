@@ -432,7 +432,7 @@ export const API = ref(new class {
         }
 
         const token = await this.sign(tokenPayload)
-        const response = await fetch(`${this.c2HostURL}/v1/file-repositories/uploads/${agentId}`, {
+        const response = await fetch(`${this.c2HostURL}/v1/files/repositories/uploads/${agentId}`, {
             headers: {
                 Authorization: token,
             }
@@ -451,7 +451,7 @@ export const API = ref(new class {
         }
 
         const token = await this.sign(tokenPayload)
-        const response = await fetch(`${this.c2HostURL}/v1/file-repositories/downloads`, {
+        const response = await fetch(`${this.c2HostURL}/v1/files/repositories/downloads`, {
             headers: {
                 Authorization: token,
             }
@@ -470,7 +470,7 @@ export const API = ref(new class {
         }
 
         const token = await this.sign(tokenPayload)
-        const response = await fetch(`${this.c2HostURL}/v1/file-repositories/remote/${agentId}`, {
+        const response = await fetch(`${this.c2HostURL}/v1/files/repositories/remote/${agentId}`, {
             headers: {
                 Authorization: token,
             }
@@ -481,6 +481,37 @@ export const API = ref(new class {
         }
 
         return await response.json() as RemoteFS
+    }
+
+    public downloadFileFromUploadsRepo = async (fileName: string) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/files/download/${fileName}`, {
+            headers: {
+                Authorization: token,
+            },
+        })
+
+        const blob = await response.blob()
+        
+        // Create a temporary URL for the blob
+        const url = window.URL.createObjectURL(blob)
+        
+        // Create a temporary link element
+        const link = document.createElement('a')
+        link.href = url
+        link.download = fileName // Set the file name for the download
+        
+        // Append the link to the DOM, trigger click, and remove it
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        
+        // Revoke the object URL to free up memory
+        window.URL.revokeObjectURL(url)
     }
 }())
 

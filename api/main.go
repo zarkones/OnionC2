@@ -116,10 +116,12 @@ func writeTorrcConfig(apiSockPath, onionServiceDirPath *string) (err error) {
 func startUserFacingService(apiHost *string) (err error) {
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /v1/file-repositories/uploads/{agentID}", apictrl.GetUploadedFiles)
-	router.HandleFunc("GET /v1/file-repositories/remote/{agentID}", apictrl.GetRemoteFS)
-	router.HandleFunc("GET /v1/file-repositories/downloads", apictrl.GetDownloadRepositoryFiles)
-	router.HandleFunc("PUT /v1/file-repositories/downloads/{fileName}", apictrl.UploadFileToDownloadsRepository)
+	router.HandleFunc("GET /v1/files/repositories/uploads/{agentID}", apictrl.GetUploadedFiles)
+	router.HandleFunc("GET /v1/files/repositories/remote/{agentID}", apictrl.GetRemoteFS)
+	router.HandleFunc("GET /v1/files/repositories/downloads", apictrl.GetDownloadRepositoryFiles)
+
+	router.HandleFunc("GET /v1/files/download/{fileName}", apictrl.DownloadFileFromUploadsRepository)
+	router.HandleFunc("PUT /v1/files/upload/{fileName}", apictrl.UploadFileToDownloadsRepository)
 
 	router.HandleFunc("GET /v1/stats/agents", apictrl.GetStatsAgents)
 	router.HandleFunc("GET /v1/stats/countries", apictrl.GetStatsCountries)

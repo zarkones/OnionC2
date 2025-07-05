@@ -9,9 +9,13 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"log"
+	"mime"
 	"net/http"
 	"os"
+	"path/filepath"
 	"slices"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -200,5 +204,70 @@ func UploadFileToDownloadsRepository(w http.ResponseWriter, r *http.Request) {
 	if err := os.WriteFile(fileName, file, 0666); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
+	}
+}
+
+func DownloadFileFromUploadsRepository(w http.ResponseWriter, r *http.Request) {
+	// Resolve the absolute path of the uploads directory
+	uploadsDir, err := filepath.Abs(*config.UploadsDirectoryPath)
+	if err != nil {
+		log.Printf("Error resolving uploads directory: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Extract and validate the file name from the request
+	fileName := r.PathValue("fileName")
+	if fileName == "" {
+		http.Error(w, "Missing file name", http.StatusBadRequest)
+		return
+	}
+
+	// Construct and clean the full file path
+	fullPath := filepath.Join(uploadsDir, fileName)
+	cleanPath := filepath.Clean(fullPath)
+
+	// Prevent directory traversal by ensuring the path stays within uploadsDir
+	if !strings.HasPrefix(cleanPath, uploadsDir+string(filepath.Separator)) {
+		http.Error(w, "Invalid file path", http.StatusForbidden)
+		return
+	}
+
+	// Check if the path exists and is a file
+	info, err := os.Stat(cleanPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.Error(w, "File not found", http.StatusNotFound)
+			return
+		}
+		log.Printf("Error stating file: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	if info.IsDir() {
+		// TODO: Log and stuff.
+		http.Error(w, "Directories cannot be downloaded", http.StatusForbidden)
+		return
+	}
+
+	// Open the file for streaming
+	file, err := os.Open(cleanPath)
+	if err != nil {
+		log.Printf("Error opening file: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+	defer file.Close()
+
+	// Set headers for file download
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
+	if contentType := mime.TypeByExtension(filepath.Ext(fileName)); contentType != "" {
+		w.Header().Set("Content-Type", contentType)
+	}
+
+	// Stream the file to the client
+	_, err = io.Copy(w, file)
+	if err != nil {
+		log.Printf("Error streaming file: %v", err)
 	}
 }

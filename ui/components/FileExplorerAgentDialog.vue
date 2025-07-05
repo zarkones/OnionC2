@@ -72,9 +72,9 @@
                                     <v-spacer />
                                     <span class="file-timestamp">{{ formatUnixNanoTime(record.timestamp) }}</span>
                                     <v-btn
+                                        @click="issueDownloadOrder(record)"
                                         variant="plain"
                                         density="compact"
-                                        @click="uploadFileToRemoteAgentFS(record)"
                                         style="float: right;"
                                         :disabled="API.store.fileRepo.loadingDownloads || API.store.fileRepo.loadingRemote"
                                     >
@@ -153,9 +153,10 @@
                             >
                                 <div class="d-flex">
                                     <v-btn
+                                        v-if="record.isDir === false"
                                         variant="plain"
                                         density="compact"
-                                        @click="downloadFile(record)"
+                                        @click="issueUploadOrder(record)"
                                         :disabled="API.store.fileRepo.loadingRemote"
                                     >
                                         <v-icon icon="mdi-arrow-left-bold"></v-icon>
@@ -184,7 +185,7 @@
                                     <div
                                         v-else
                                     >
-                                        <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2 ml-3"></v-icon>
+                                        <v-icon :icon="record.isDir ? 'mdi-folder' : 'mdi-file-outline'" class="mr-2"></v-icon>
                                         <span>{{ record.name }}</span>
                                     </div>
 
@@ -199,7 +200,7 @@
             </div>
 
             <v-card-actions>
-                <v-btn
+                <!-- <v-btn
                     variant="plain"
                     density="compact"
                     @click="apply"
@@ -213,7 +214,7 @@
                            Confirm sending of instructions to agent to download/upload file/s.
                         </div>
                     </v-tooltip>
-                </v-btn>
+                </v-btn> -->
             </v-card-actions>
 
         </v-card>
@@ -241,12 +242,38 @@ const selected = async () => {
     }
 }
 
-const uploadFileToRemoteAgentFS = async (record: FileRecord) => {
+const issueUploadOrder = async (record: FileRecord) => {
+    console.log('upload order:', record)
+    API.value.store.fileRepo.loadingDownloads = true
+    try {
+        await API.value.sendMessage(props.agentId, `/upload-file|${API.value.store.fileRepo.remote.currentDir}\\${record.name}`)
+    } catch(e) {
+        console.error(e)
+    } finally {
+        API.value.store.fileRepo.loadingDownloads = false
+    }
+}
 
+const issueDownloadOrder = async (record: FileRecord) => {
+    API.value.store.fileRepo.loadingUploads = true
+    try {
+        await API.value.sendMessage(props.agentId, `/download-file|${record.name}`)
+    } catch(e) {
+        console.error(e)
+    } finally {
+        API.value.store.fileRepo.loadingUploads = false
+    }
 }
 
 const downloadFile = async (record: FileRecord) => {
-
+    API.value.store.fileRepo.loadingDownloads = true
+    try {
+        await API.value.downloadFileFromUploadsRepo(record.name)
+    } catch(e) {
+        console.error(e)
+    } finally {
+        API.value.store.fileRepo.loadingDownloads = false
+    }
 }
 
 const apply = async () => {
@@ -274,6 +301,7 @@ const changeDir = async (dirName: string) => {
 
 .fs-directory {
     cursor: pointer;
+    margin-left: 51px;
 }
 
 </style>
