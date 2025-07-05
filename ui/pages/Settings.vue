@@ -68,7 +68,7 @@
                                         title="Show Public Key"
                                         :text="selectedOperator?.publicKeyHex"
                                     />
-                            </v-expansion-panels>
+                                </v-expansion-panels>
 
                                 <v-row class="mt-2">
                                     <v-col cols="2"><h4>Created At:</h4></v-col>
@@ -85,18 +85,22 @@
                                 </v-row> -->
                                 <v-data-table-virtual
                                     :headers="(headers as any)"
-                                    :items="permissions"
+                                    :items="Object.keys(permissions)"
                                     density="compact"
                                     item-key="id"
-                                    class="table-el liquid-glass mt-4"
+                                    class="liquid-glass mt-4"
                                     fixed-header
                                 >
                                     <template v-slot:item.key="{ item }">
-                                        {{ PERMISSIONS[item.key] }}
+                                        {{ PERMISSIONS[permissions[item].key] }}
+                                    </template>
+
+                                    <template v-slot:item.acquired="{ item }">
+                                        <v-switch class="mt-5" color="primary" v-model="permissions[item].acquired" label="Switch"></v-switch>
                                     </template>
                                     
                                     <template v-slot:item.createdAt="{ item }">
-                                        {{ formatUnixNanoTime(item.createdAt) }}
+                                        {{ permissions[item].acquired === true ? formatUnixNanoTime(permissions[item].createdAt) : '' }}
                                     </template>
 
                                     <template v-slot:item.actions="{ item }">
@@ -128,10 +132,11 @@ const privateKeyHexPem = ref('')
 const keyParsingErrored = ref(false)
 const selectedOperatorUsername = ref('')
 const selectedOperator: Ref<Operator | null> = ref(null)
-const permissions = ref([] as Permission[])
+const permissions = ref({} as GetPermissionsRespCtx)
 
 const headers = [
     { title: 'Key', align: 'start', key: 'key' },
+    { title: 'Acquired', align: 'start', key: 'acquired' },
     { title: 'Created At', align: 'start', key: 'createdAt' },
     { title: 'Actions', align: 'end', key: 'actions' },
 ]
@@ -145,6 +150,7 @@ const switchOperator = async () => {
     }
 
     permissions.value = await API.value.fetchPermissions(selectedOperator.value.username)
+    console.log(permissions.value)
 }
 
 const updatePrivateKey = async () => {
@@ -163,7 +169,7 @@ const updatePrivateKey = async () => {
 
 </script>
 
-<style>
+<style scoped>
 
 .settings-container {
     margin-top: auto;

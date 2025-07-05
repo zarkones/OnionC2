@@ -7,6 +7,13 @@ import (
 	"net/http"
 )
 
+type ExtendedPermission struct {
+	models.Permission
+	Acquired bool `json:"acquired"`
+}
+
+type GetPermissionsRespCtx map[models.PermissionKey]ExtendedPermission
+
 func GetPermissions(w http.ResponseWriter, r *http.Request) {
 	_, _, reject := authenticateAndAuthorize(w, r, models.PERMISSION_LIST, nil)
 	if reject {
@@ -26,7 +33,27 @@ func GetPermissions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&permissions); err != nil {
+	operatorPermissionMap := make(map[models.PermissionKey]models.Permission, len(permissions))
+	for _, permission := range permissions {
+		operatorPermissionMap[permission.Key] = permission
+	}
+
+	permissionMap := make(GetPermissionsRespCtx, len(models.AllPermissions))
+	for _, permissionKey := range models.AllPermissions {
+		if _, ok := operatorPermissionMap[permissionKey]; ok {
+			permissionMap[permissionKey] = ExtendedPermission{
+				Permission: operatorPermissionMap[permissionKey],
+				Acquired:   true,
+			}
+			continue
+		}
+		permissionMap[permissionKey] = ExtendedPermission{
+			Permission: operatorPermissionMap[permissionKey],
+			Acquired:   false,
+		}
+	}
+
+	if err := json.NewEncoder(w).Encode(&permissionMap); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

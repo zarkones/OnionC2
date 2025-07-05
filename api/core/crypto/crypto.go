@@ -55,30 +55,7 @@ func CreateAdminOperator(username string) (operator models.Operator, recoveryWor
 		return operator, nil, "", err
 	}
 
-	allowedPermissions := []models.PermissionKey{
-		models.PERMISSION_AGENTS_LIST,
-		models.PERMISSION_AGENTS_STATS,
-		models.PERMISSION_AGENTS_LIST_MESSAGES,
-		models.PERMISSION_AGENTS_INSERT_MESSAGE,
-		models.PERMISSION_CHAT_LIST_CHANNELS,
-		models.PERMISSION_CHAT_LIST_CHANNEL_MESSAGES,
-		models.PERMISSION_CHAT_INSERT_CHANNEL,
-		models.PERMISSION_CHAT_INSERT_CHANNEL_MESSAGE,
-		models.PERMISSION_CHAT_DELETE_CHANNEL,
-		models.PERMISSION_CHAT_DELETE_CHANNEL_MESSAGE,
-		models.PERMISSION_OPERATORS_INSERT,
-		models.PERMISSION_OPERATORS_DELETE,
-		models.PERMISSION_OPERATORS_LIST,
-		models.PERMISSION_INSERT,
-		models.PERMISSION_DELETE,
-		models.PERMISSION_LIST,
-		models.PERMISSION_FILES_UPLOADS_REPO_LIST,
-		models.PERMISSION_FILES_REMOTE_REPO_LIST,
-		models.PERMISSION_FILES_DOWNLOADS_REPO_LIST,
-		models.PERMISSION_FILES_UPLOAD_TO_DOWNLOADS_REPO,
-	}
-
-	for _, key := range allowedPermissions {
+	for _, key := range models.AllPermissions {
 		if err := permissionsRepo.Insert(&models.Permission{
 			Username: username,
 			Key:      key,
