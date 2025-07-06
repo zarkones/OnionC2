@@ -1,3 +1,8 @@
+# 0.1.0
+- Authentication migrated away from API keys to public-key scheme.
+- Fine grained access control managemenet for operator accounts.
+- New web based user interface.
+
 # 0.0.14
 - Upgrading Tor client version.
 

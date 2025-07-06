@@ -2,20 +2,50 @@ package main
 
 import (
 	"api/config"
+	"api/core/crypto"
 	"api/ctrl/apictrl"
 	"api/ctrl/c2ctrl"
 	"api/db"
+	"api/geoip"
+	"api/repos/operatorsRepo"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func main() {
 	// Assures command line arguments are valid enough to run the program.
 	// Exits if not.
 	config.Validate()
+
+	// Initialize an instance of SQLite database.
+	if err := db.Init(*config.DbPath); err != nil {
+		fmt.Println("error: writeTorrcConfig:", err)
+		os.Exit(1)
+	}
+
+	// Creation of administrative operator account.
+	if *config.UserInsertAdmin {
+		operator, recoveryPhrase, hexEncodedPrivateKey, err := crypto.CreateAdminOperator(*config.UserName)
+		if err != nil {
+			log.Println("failed to create admin operator account:", err)
+			os.Exit(1)
+		}
+
+		if err := operatorsRepo.Insert(&operator); err != nil {
+			log.Println("failed to inser admin operator account into database:", err)
+			os.Exit(1)
+		}
+
+		log.Println("Username:", operator.Username)
+		log.Println("Recovery Word Phrase:", strings.Join(recoveryPhrase, " "))
+		log.Println("Private Key:", hexEncodedPrivateKey)
+
+		os.Exit(0)
+	}
 
 	// Clean up previous Unix socket of the API, just in case it's there.
 	os.RemoveAll(*config.ApiSockPath)
@@ -25,17 +55,17 @@ func main() {
 	os.MkdirAll(*config.UploadsDirectoryPath, 0777)
 	os.MkdirAll(*config.DownloadsDirectoryPath, 0777)
 
+	// Initialize geoip data.
+	if err := geoip.Init(); err != nil {
+		log.Println("failed to initialize geoip repository:", err)
+		os.Exit(1)
+	}
+
 	// "torrc" configuration file contains instructions for how Tor should
 	// behave. In our case we use it in order to define our onion service.
 	// https://community.torproject.org/onion-services/overview
 	// https://support.torproject.org/tbb/tbb-editing-torrc
 	if err := writeTorrcConfig(config.ApiSockPath, config.OnionServicePath); err != nil {
-		fmt.Println("error: writeTorrcConfig:", err)
-		os.Exit(1)
-	}
-
-	// Initialize an instance of SQLite database.
-	if err := db.Init(*config.DbPath); err != nil {
 		fmt.Println("error: writeTorrcConfig:", err)
 		os.Exit(1)
 	}
@@ -86,9 +116,41 @@ func writeTorrcConfig(apiSockPath, onionServiceDirPath *string) (err error) {
 func startUserFacingService(apiHost *string) (err error) {
 	router := http.NewServeMux()
 
+	router.HandleFunc("GET /v1/files/repositories/uploads/{agentID}", apictrl.GetUploadedFiles)
+	router.HandleFunc("GET /v1/files/repositories/remote/{agentID}", apictrl.GetRemoteFS)
+	router.HandleFunc("GET /v1/files/repositories/downloads", apictrl.GetDownloadRepositoryFiles)
+
+	router.HandleFunc("GET /v1/files/download/{fileName}", apictrl.DownloadFileFromUploadsRepository)
+	router.HandleFunc("PUT /v1/files/upload/{fileName}", apictrl.UploadFileToDownloadsRepository)
+
+	router.HandleFunc("GET /v1/stats/agents", apictrl.GetStatsAgents)
+	router.HandleFunc("GET /v1/stats/countries", apictrl.GetStatsCountries)
+
+	router.HandleFunc("GET /v1/geoip/origins", apictrl.GetOrigins())
+
 	router.HandleFunc("GET /v1/agents", apictrl.GetAgents)
+
+	router.HandleFunc("GET /v1/permissions/{operatorUsername}", apictrl.GetPermissions)
+	router.HandleFunc("PUT /v1/permissions", apictrl.InsertPermission)
+	router.HandleFunc("DELETE /v1/permissions/{permissionID}", apictrl.DeletePermission)
+
+	router.HandleFunc("GET /v1/operators", apictrl.GetOperators)
+
+	router.HandleFunc("POST /v1/messages/by-ids", apictrl.GetMessageByIDs)
 	router.HandleFunc("GET /v1/messages/{agentID}", apictrl.GetMessages)
-	router.HandleFunc("POST /v1/messages", apictrl.InsertMessage)
+	router.HandleFunc("PUT /v1/messages", apictrl.InsertMessage)
+
+	router.HandleFunc("GET /v1/channels", apictrl.GetChannels)
+	router.HandleFunc("PUT /v1/channels", apictrl.InsertChannel)
+	router.HandleFunc("POST /v1/channels/{channelName}", apictrl.UpdateChannel)
+	router.HandleFunc("DELETE /v1/channels/{channelName}", apictrl.DeleteChannels)
+
+	router.HandleFunc("GET /v1/channels/{channelName}/messages", apictrl.GetChannelMessages)
+	router.HandleFunc("PUT /v1/channels/{channelName}/messages", apictrl.InsertChannelMessage)
+	router.HandleFunc("DELETE /v1/channels/{channelName}/messages", apictrl.DeleteChannelMessages)
+
+	router.HandleFunc("PUT /v1/channels/{channelName}/invites/{invitedOperatorUsername}", apictrl.InviteToChannel)
+	router.HandleFunc("DELETE /v1/channels/{channelName}/invites/{invitedOperatorUsername}", apictrl.RemoveFromChannel)
 
 	server := &http.Server{
 		Handler: router,

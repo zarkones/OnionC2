@@ -1,0 +1,27 @@
+{
+	"name": "nuxt-app",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "nuxt build",
+		"dev": "nuxt dev",
+		"dev2": "nuxt dev --host",
+		"generate": "nuxt generate",
+		"preview": "nuxt preview",
+		"postinstall": "nuxt prepare"
+	},
+	"dependencies": {
+		"@mdi/font": "^7.4.47",
+		"@nuxt/test-utils": "^3.19.1",
+		"chart.js": "^4.5.0",
+		"jose": "^6.0.11",
+		"nuxt": "^3.17.5",
+		"vue": "^3.5.17",
+		"vue-chartjs": "^5.3.2",
+		"vue-router": "^4.5.1"
+	},
+	"devDependencies": {
+		"vite-plugin-vuetify": "^2.1.1",
+		"vuetify": "^3.8.10"
+	}
+}

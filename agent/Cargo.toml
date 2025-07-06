@@ -16,6 +16,7 @@ windows = { version = "0.61.1", features = ["Win32_System_Memory", "Win32_System
 systemstat = "0.2.4"
 sysinfo = "=0.35.2"
 jiff = "0.2.15"
+reqwest = { version = "^0.12.7", default-features = false, features = ["rustls-tls"] }
 
 [profile.release]
 opt-level = "z"

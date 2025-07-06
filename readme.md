@@ -1,24 +1,12 @@
+![Promo Image 1](https://raw.githubusercontent.com/zarkones/OnionC2/production/promo/promo1.png)
+
 # INTRODUCTION
-This is a command and control (C2) tool with communications over Tor network. Agent is made in Rust and C2 in Go.
+OnionC2 is a command and control (C2) framework with communications over Tor network. It's packed with privacy & security features, and operational capabilities. It is simple to setup, and has a friendly user interface. It is cross-platform and supports collaboration between operators.
 
-C2 has two APIs; one for onion service listening on a unix socket, and another listening (by default) on port 8080 for connecting the user interface. C2's API for user interface integration is based on XENA's C2, offering a seemless integration with XENA's dark-themed, elegant user interface writen in Go, find out more at https://github.com/zarkones/XENA.
-
-Agent does not need to "bundle" Tor service nor anything of a sort. Instead it relies on Arti, a rewrite of Tor in Rust. This allows easy compilation for many targets and way less trouble compared to trying to embed Tor writen in C into an agent. Arti does not offer all of the security features of legacy Tor implementation, however, that doesn't matter since you can (and should for the time being) run the onion service via the legacy battle tested Tor implementation.
-
-Note that this is experimental and ongoing development effort.
-
-### SOCIAL ###
-[Patreon](https://www.patreon.com/zarkones) |
-[Discord](https://discord.gg/qjJwSh2TF9) |
-[X.com](https://x.com/zarkones) |
-[YouTube](https://www.youtube.com/channel/UCn-7I-L-ZpiELb8-6z7z_Ug) |
-[Itch.io](https://zarkones.itch.io) |
-[GitHub](https://github.com/zarkones)
-
-# FEATURES
+# AGENT'S FEATURES
 - Tor integration (allows for end to end encryption, hiding the C2's IP address)
 - Execution of shell commands.
-- Basic attempt of hiding C2 config in the agent's binary.
+- Obfuscating C2 configuration in the agent's binary.
 - Registry based persistence on Windows.
 - Shortcut takeover based persistence on Windows.
 - Active hours, allowing an agent to communicate only within specific time frames.
@@ -29,22 +17,50 @@ Note that this is experimental and ongoing development effort.
 - Command "/run|<SHELL_COMMAND>" which executes shell command without awaiting it. 
 - Command "/read-clipboard" which returns clipboard data.
 
-Planned features:
-- Sleep call acceleration detection.
-- Optional hibernation mode.
-- Take screenshot.
-
 # SETUP
-[Setup Video Tutorial](https://youtu.be/Q7xVNUWcgvM)
+This guide assumes you have Go, Rust, and Node ready.
 
-This guide assumes you have Go, Rust, and XENA ready.
+## Back-end Setup
 
-- Run the C2 server via: cd api && go run . --api-key=your_secret_api_key_longer_than_16_chars
-- Run XENA's user interface; go to settings tab and put your_secret_api_key_longer_than_16_chars into "Authentication Token" field. (Alternatively the UI accepts it via AUTH_TOKEN environment variable)
-- Run Tor onion service based on the configuration made by the C2 program via: cd api && tor -f torrc
-- When Tor onion service is ready you will see a .onion domain inside: api/onionservice/hostname, place that domain in function "get_address" in agent/src/config.rs
-- Run the agent via: cd agent && cargo run
+### Administrator Account
+OnionC2 supports multiple operator accounts. In this setup guide, you'll learn how to create an over-powered administrator account. You should use this administrator account only when required. During day-to-day operations it is recommended to use an account with less permissions.
 
-That's it. If you wish to know more about it execute the C2 server with "-h" command for help, or read the source code. It's a lean codebase. A good starting point for further development.
+Navigate to "api" directory and run the following command: go run . --create-admin --username <YOUR_USERNAME>
 
-![Promo Image 1](https://raw.githubusercontent.com/zarkones/OnionC2/production/promo/promo1.png)
+This command would print out your account's recovery word phrase and its private key. Save it somewhere secure, as without the private key you won't be able to authenticate with the C2 API, and without the recovery word phrase you won't be able to recover your private key in case you lose it.
+
+### API Setup
+Back-end service is composed of two APIs. Agents-facing API is listening on a Unix socket, while the Operator-facing API is listening by default on port 8080. To see additional configuration possibilities run the API with "-h" argument.
+
+To run the API navigate into the "api" directory an execute: go run .
+
+This would automatically create SQLite database and perform all the needed database migrations. Also, it would create a file named "torrc", this file describes out Onion service and allows Tor to route traffic to our agents-facing API.
+
+To run the Onion service run the following command inside of the "api" directory: tor -f torrc
+
+## Front-End Setup
+
+### Build Process & Serving The UI
+First you need to build the user interface, prior to serving it, in order to do so, execute the following command inside of the "ui" directory: npm run build
+
+This would generate static HTML/JS/CSS files in directory ".output/public"
+
+You can serve files from that directory using a web server of your choice, or use the one provided by the OnionC2 by running the following command inside of the "ui" directory: go run serve.go
+
+### Authentication
+Navigate to the Settings page -> Authentication tab. There enter the C2's host URL, your username and the private key.
+
+## Agent Setup
+All configuration related to the behavior of agents is located in a file "agent/src/config.rs". Basic configuration requires you to set at least the Onion domain in the function named "get_address". Domain of your Onion service is located in "api/onionservice/hostname".
+
+To build an agent run the following script inside of the "agent" directory: sh build.sh
+
+To configure persistence or any other option refer to comments inside of the "config.rs" file. It's well documented with code comments. If something isn't clear reach out to our Discord server.
+
+# SOCIAL
+[Patreon](https://www.patreon.com/zarkones) |
+[Discord](https://discord.gg/qjJwSh2TF9) |
+[X.com](https://x.com/zarkones) |
+[YouTube](https://www.youtube.com/channel/UCn-7I-L-ZpiELb8-6z7z_Ug) |
+[Itch.io](https://zarkones.itch.io) |
+[GitHub](https://github.com/zarkones)

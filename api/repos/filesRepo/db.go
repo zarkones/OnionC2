@@ -14,6 +14,10 @@ func GetMultiple() (files []models.File, err error) {
 	return files, db.ORM.Find(&files).Error
 }
 
+func GetMultipleByAgentID(agentID string) (files []models.File, err error) {
+	return files, db.ORM.Where("agent_id = ?", agentID).Find(&files).Error
+}
+
 func Insert(file *models.File) (err error) {
 	return db.ORM.Create(&file).Error
 }

