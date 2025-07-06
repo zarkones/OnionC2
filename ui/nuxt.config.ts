@@ -6,6 +6,9 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-05-15',
     ssr: false,
     devtools: { enabled: true },
+    nitro: {
+        preset: 'static',
+    },
     build: {
         transpile: ['vuetify'],
     },
