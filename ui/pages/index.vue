@@ -3,7 +3,7 @@
     <div v-show="showChat" ref="chatDiv" class="chat-container">
         <Chat />
     </div>
-    <div ref="infoCharts" class="info-charts liquid-glass">
+    <!-- <div ref="infoCharts" class="info-charts liquid-glass">
         <div class="actions">
             <v-btn @click="toggleShowStats" density="compact" variant="plain">
                 <v-icon v-if="hideStats" icon="mdi-chevron-up" />
@@ -30,7 +30,7 @@
         
         <v-divider v-show="!hideStats" class="mb-1 mt-3" />
         <InfoCharts v-show="!hideStats" />
-    </div>
+    </div> -->
 </template>
 
 <script setup lang="ts">
