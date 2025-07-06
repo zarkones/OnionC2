@@ -39,11 +39,16 @@ This would automatically create SQLite database and perform all the needed datab
 To run the Onion service run the following command inside of the "api" directory: tor -f torrc
 
 ## Front-End Setup
+
+### Build Process & Serving The UI
 First you need to build the user interface, prior to serving it, in order to do so, execute the following command inside of the "ui" directory: npm run build
 
 This would generate static HTML/JS/CSS files in directory ".output/public"
 
 You can serve files from that directory using a web server of your choice, or use the one provided by the OnionC2 by running the following command inside of the "ui" directory: go run serve.go
+
+### Authentication
+Navigate to the Settings page -> Authentication tab. There enter the C2's host URL, your username and the private key.
 
 ## Agent Setup
 All configuration related to the behavior of agents is located in a file "agent/src/config.rs". Basic configuration requires you to set at least the Onion domain in the function named "get_address". Domain of your Onion service is located in "api/onionservice/hostname".
