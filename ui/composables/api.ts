@@ -51,6 +51,7 @@ export type Permission = {
 export type GetPermissionsRespCtx = Record<PERMISSIONS, Permission>
 
 export enum PERMISSIONS {
+    PERMISSION_NOT_SPECIFIED,
     PERMISSION_AGENTS_LIST,
     PERMISSION_AGENTS_STATS,
     PERMISSION_AGENTS_LIST_MESSAGES,
