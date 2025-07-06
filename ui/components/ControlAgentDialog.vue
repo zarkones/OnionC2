@@ -47,6 +47,10 @@
                         :agentId="props.agentId"
                     />
 
+                    <FileSearchDialog
+                        :agentId="props.agentId"
+                    />
+
                     <!-- <v-btn
                         variant="plain"
                         density="compact"

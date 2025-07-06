@@ -90,25 +90,25 @@
                                     item-key="id"
                                     class="liquid-glass mt-4"
                                     fixed-header
+                                    style="max-height: 400px;"
                                 >
                                     <template v-slot:item.key="{ item }">
                                         {{ PERMISSIONS[permissions[item].key] }}
                                     </template>
 
                                     <template v-slot:item.acquired="{ item }">
-                                        <v-switch class="mt-5" color="primary" v-model="permissions[item].acquired" label="Switch"></v-switch>
+                                        <v-switch class="mt-5" color="primary" v-model="permissions[item].acquired"></v-switch>
                                     </template>
                                     
                                     <template v-slot:item.createdAt="{ item }">
                                         {{ permissions[item].acquired === true ? formatUnixNanoTime(permissions[item].createdAt) : '' }}
                                     </template>
 
-                                    <template v-slot:item.actions="{ item }">
+                                    <!-- <template v-slot:item.actions="{ item }">
                                         <v-btn density="compact" variant="plain">
-                                            <!-- // TODO: -->
                                             <v-icon icon="mdi-delete"></v-icon>
                                         </v-btn>
-                                    </template>
+                                    </template> -->
                                 </v-data-table-virtual>
                             </div>
                         </v-tabs-window-item>
@@ -138,7 +138,7 @@ const headers = [
     { title: 'Key', align: 'start', key: 'key' },
     { title: 'Acquired', align: 'start', key: 'acquired' },
     { title: 'Created At', align: 'start', key: 'createdAt' },
-    { title: 'Actions', align: 'end', key: 'actions' },
+    // { title: 'Actidasdons', align: 'end', key: 'actions' },
 ]
 
 const switchOperator = async () => {
