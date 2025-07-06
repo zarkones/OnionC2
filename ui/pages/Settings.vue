@@ -93,15 +93,20 @@
                                     style="max-height: 400px;"
                                 >
                                     <template v-slot:item.key="{ item }">
-                                        {{ PERMISSIONS[permissions[item].key] }}
+                                        {{ PERMISSIONS[permissions[parseInt(item) as PERMISSIONS].key] }}
                                     </template>
 
                                     <template v-slot:item.acquired="{ item }">
-                                        <v-switch class="mt-5" color="primary" v-model="permissions[item].acquired"></v-switch>
+                                        <v-switch
+                                            v-model="permissions[parseInt(item) as PERMISSIONS].acquired"
+                                            @update:model-value="switchToggled(permissions[parseInt(item) as PERMISSIONS])"
+                                            class="mt-5"
+                                            color="primary"
+                                        />
                                     </template>
                                     
                                     <template v-slot:item.createdAt="{ item }">
-                                        {{ permissions[item].acquired === true ? formatUnixNanoTime(permissions[item].createdAt) : '' }}
+                                        {{ permissions[parseInt(item) as PERMISSIONS].acquired === true ? formatUnixNanoTime(permissions[parseInt(item) as PERMISSIONS].createdAt) : '' }}
                                     </template>
 
                                     <!-- <template v-slot:item.actions="{ item }">
@@ -141,16 +146,29 @@ const headers = [
     // { title: 'Actidasdons', align: 'end', key: 'actions' },
 ]
 
+const switchToggled = async (permission: Permission) => {
+    if (permission.acquired === false) {
+        await API.value.deletePermission(permission.id)
+        await API.value.generalUpdate()
+        return
+    }
+    await API.value.insertPermission({
+        key: permission.key,
+        username: permission.username,
+    })
+    // @ts-ignore
+    permissions.value = await API.value.fetchPermissions(selectedOperator.value.username)
+}
+
 const switchOperator = async () => {
     try {
-    selectedOperator.value = API.value.store.operators.data.filter(o => o.username === selectedOperatorUsername.value)[0] as Operator
+        selectedOperator.value = API.value.store.operators.data.filter(o => o.username === selectedOperatorUsername.value)[0] as Operator
     } catch(e) {
         console.error('could not find stored operator with username of:', selectedOperatorUsername.value)
         return
     }
 
     permissions.value = await API.value.fetchPermissions(selectedOperator.value.username)
-    console.log(permissions.value)
 }
 
 const updatePrivateKey = async () => {

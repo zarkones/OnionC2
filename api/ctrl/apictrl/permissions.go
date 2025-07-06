@@ -48,8 +48,11 @@ func GetPermissions(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		permissionMap[permissionKey] = ExtendedPermission{
-			Permission: operatorPermissionMap[permissionKey],
-			Acquired:   false,
+			Permission: models.Permission{
+				Key:      permissionKey,
+				Username: operatorUsername,
+			},
+			Acquired: false,
 		}
 	}
 
@@ -78,6 +81,10 @@ func InsertPermission(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(newPermission.Username) == 0 {
 		http.Error(w, "username must be provided", http.StatusUnprocessableEntity)
+		return
+	}
+	if newPermission.Key == models.PERMISSION_NOT_SPECIFIED {
+		http.Error(w, "permission key cannot be PERMISSION_NOT_SPECIFIED", http.StatusUnprocessableEntity)
 		return
 	}
 

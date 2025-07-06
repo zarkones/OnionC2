@@ -41,11 +41,14 @@ export type StatsAgents = {
 }
 
 export type Permission = {
-    id: string        
-    key: number 
-    username: string        
-    metadata: string        
-    createdAt: bigint         
+    id: string
+    key: number
+    username: string
+    metadata: string
+    createdAt: bigint
+
+    // UI specific properties.
+    acquired: boolean
 }
 
 export type GetPermissionsRespCtx = Record<PERMISSIONS, Permission>
@@ -157,29 +160,44 @@ export const API = ref(new class {
             return
         }
 
-        this.store.value.agents.data = await this.fetchAgents(this.store.value.agents.page)
-        this.store.value.operators.data = await this.fetchOperators(this.store.value.operators.page)
+        try {
+            this.store.value.agents.data = await this.fetchAgents(this.store.value.agents.page)
+        } catch(e) { console.log(e) }
+        
+        try {
+            this.store.value.operators.data = await this.fetchOperators(this.store.value.operators.page)
+        } catch(e) { console.log(e) }
 
         if (this.store.value.origins.data.length === 0) {
-            this.store.value.origins.data = await this.fetchOrigins()
+            try {
+                this.store.value.origins.data = await this.fetchOrigins()
+            } catch(e) { console.log(e) }
         }
 
-        const statsAgents = await this.fetchStatsAgents()
-        this.store.value.stats.unknownOriginCount = statsAgents.unknownOriginCount
+        try {
+            const statsAgents = await this.fetchStatsAgents()
+            this.store.value.stats.unknownOriginCount = statsAgents.unknownOriginCount
+        } catch(e) { console.log(e) }
 
-        this.store.value.stats.countryCodes = await this.fetchStatsCountries()
+        try {
+            this.store.value.stats.countryCodes = await this.fetchStatsCountries()
+        } catch(e) { console.log(e) }
 
         if (this.store.value.fileRepo.agentId.length !== 0) {
-            this.store.value.fileRepo.uploads = await this.fetchUploadsRepo(this.store.value.fileRepo.agentId)
-            this.store.value.fileRepo.remote = await this.fetchRemoteFS(this.store.value.fileRepo.agentId)
-            if (
-                (this.store.value.fileRepo.remote.id !== '' && this.store.value.fileRepo.remote.latestRequestedId !== '')
-                && (this.store.value.fileRepo.remote.id === this.store.value.fileRepo.remote.latestRequestedId)
-            ) {
-                this.store.value.fileRepo.loadingRemote = false
-            }
+            try {
+                this.store.value.fileRepo.uploads = await this.fetchUploadsRepo(this.store.value.fileRepo.agentId)
+                this.store.value.fileRepo.remote = await this.fetchRemoteFS(this.store.value.fileRepo.agentId)
+                if (
+                    (this.store.value.fileRepo.remote.id !== '' && this.store.value.fileRepo.remote.latestRequestedId !== '')
+                    && (this.store.value.fileRepo.remote.id === this.store.value.fileRepo.remote.latestRequestedId)
+                ) {
+                    this.store.value.fileRepo.loadingRemote = false
+                }
+            } catch(e) { console.log(e) }
         }
-        this.store.value.fileRepo.downloads = await this.fetchDownloadsRepo()
+        try {
+            this.store.value.fileRepo.downloads = await this.fetchDownloadsRepo()
+        } catch(e) { console.log(e) }
     }
 
     private initializePeriodicDataFetching = async () => {
@@ -487,6 +505,45 @@ export const API = ref(new class {
         }
 
         return await response.json() as RemoteFS
+    }
+
+    public insertPermission = async (permission: Partial<Permission>) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        console.log('pppp:', permission)
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/permissions`, {
+            method: 'PUT',
+            headers: {
+                Authorization: token,
+            },
+            body: JSON.stringify(permission),
+        })
+
+        if (response.status === 200) {
+            throw Error(`unexpected status code: ${response.status}`)
+        }
+    }
+
+    public deletePermission = async (permissionId: string) => {
+        const tokenPayload: JWTPayload = {
+            u: this.username,
+        }
+
+        const token = await this.sign(tokenPayload)
+        const response = await fetch(`${this.c2HostURL}/v1/permissions/${permissionId}`, {
+            method: 'DELETE',
+            headers: {
+                Authorization: token,
+            }
+        })
+
+        if (response.status === 200) {
+            throw Error(`unexpected status code: ${response.status}`)
+        }
     }
 
     public downloadFileFromUploadsRepo = async (fileName: string) => {
