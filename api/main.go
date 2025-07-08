@@ -7,6 +7,7 @@ import (
 	"api/ctrl/c2ctrl"
 	"api/db"
 	"api/geoip"
+	"api/middleware"
 	"api/repos/operatorsRepo"
 	"fmt"
 	"log"
@@ -15,21 +16,6 @@ import (
 	"os"
 	"strings"
 )
-
-func withCORS(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*") // Allow all origins for CORS. Change it to specific origins in production.
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if r.Method == http.MethodOptions {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		h.ServeHTTP(w, r)
-	})
-}
 
 func main() {
 	// Assures command line arguments are valid enough to run the program.
@@ -168,7 +154,7 @@ func startUserFacingService(apiHost *string) (err error) {
 	router.HandleFunc("DELETE /v1/channels/{channelName}/invites/{invitedOperatorUsername}", apictrl.RemoveFromChannel)
 
 	server := &http.Server{
-		Handler: withCORS(router),
+		Handler: middleware.WithCORS(router),
 		Addr:    *apiHost,
 	}
 
