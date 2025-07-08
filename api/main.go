@@ -7,6 +7,7 @@ import (
 	"api/ctrl/c2ctrl"
 	"api/db"
 	"api/geoip"
+	"api/middleware"
 	"api/repos/operatorsRepo"
 	"fmt"
 	"log"
@@ -153,7 +154,7 @@ func startUserFacingService(apiHost *string) (err error) {
 	router.HandleFunc("DELETE /v1/channels/{channelName}/invites/{invitedOperatorUsername}", apictrl.RemoveFromChannel)
 
 	server := &http.Server{
-		Handler: router,
+		Handler: middleware.WithCORS(router),
 		Addr:    *apiHost,
 	}
 
