@@ -14,7 +14,7 @@ var (
 	OnionServicePath       = flag.String("onion-service-path", "./onionservice", "path to onion service's directory")
 	UploadsDirectoryPath   = flag.String("uploads-dir-path", "./agent-upload-dir", "path to directory where agents would upload files an operator requests of them")
 	DownloadsDirectoryPath = flag.String("downloads-dir-path", "./agent-download-dir", "path to directory where agents would download files from")
-	AllowedOrigins         = flag.String("allowed-origins", "http://127.0.0.1:3000", "comma separated list of allowed origins for CORS requests, use '*' to allow all origins")
+	AllowedOrigin          = flag.String("allowed-origin", "", "allowed origin for CORS(e.g., http://localhost:3000). Leave empty to disable CORS.")
 
 	// Insert user action.
 	UserInsertAdmin = flag.Bool("create-admin", false, "creates an administrative operator account with all permissions, requires --username and --password arguments")
@@ -37,7 +37,8 @@ func Validate() {
 		fmt.Println("api sock path must have '.sock' suffix")
 		os.Exit(1)
 	}
-	if *AllowedOrigins == "*" {
-		fmt.Println("warning: allowed-origins is set to '*'")
+	if *AllowedOrigin == "*" || *AllowedOrigin == "null" {
+		fmt.Println("allowed-origin is set to '*' or 'null', this is insecure.")
+		os.Exit(1)
 	}
 }
