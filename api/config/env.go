@@ -37,14 +37,7 @@ func Validate() {
 		fmt.Println("api sock path must have '.sock' suffix")
 		os.Exit(1)
 	}
-
-	// if AllowedOrigins == nil || *AllowedOrigins == "" {
-	// 	fmt.Println("warning: allowed-origins is not set, CORS will not be enabled")
-	// } else {
-	// 	AllowedOriginList = strings.Split(*AllowedOrigins, ",")
-	// 	for i := range AllowedOriginList {
-	// 		AllowedOriginList[i] = strings.TrimSpace(AllowedOriginList[i])
-	// 	}
-	// 	fmt.Println("Allowed origins:", AllowedOriginList)
-	// }
+	if *AllowedOrigins == "*" {
+		fmt.Println("warning: allowed-origins is set to '*'")
+	}
 }
