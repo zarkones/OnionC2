@@ -41,7 +41,7 @@ To run the Onion service run the following command inside of the "api" directory
 ## Front-End Setup
 
 ### Build Process & Serving The UI
-First you need to build the user interface, prior to serving it, in order to do so, execute the following command inside of the "ui" directory: npm run build
+First you need to build the user interface, prior to serving it, in order to do so, execute the following command inside of the "ui" directory: npm install && npm run build
 
 This would generate static HTML/JS/CSS files in directory ".output/public"
 
