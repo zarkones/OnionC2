@@ -17,6 +17,9 @@ OnionC2 is a command and control (C2) framework with communications over Tor net
 - Command "/run|<SHELL_COMMAND>" which executes shell command without awaiting it. 
 - Command "/read-clipboard" which returns clipboard data.
 
+# WIKI
+https://deepwiki.com/zarkones/OnionC2
+
 # SETUP
 This guide assumes you have Go, Rust, and Node ready.
 
